@@ -1,0 +1,21 @@
+:root {
+  --papel: #efe6d2;
+  --tinta: #2b2a24;
+  --carimbo: #8a2c1f;
+  --musgo: #4d5b43;
+  --mono: 'IBM Plex Mono', 'Cascadia Mono', Consolas, monospace;
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.provisorio {
+  max-width: 40rem;
+  margin: 4rem auto;
+  padding-inline: 1rem;
+}
