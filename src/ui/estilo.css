@@ -1,10 +1,20 @@
 :root {
   --papel: #efe6d2;
+  --papel-escuro: #e2d6bb;
   --tinta: #2b2a24;
+  --tinta-suave: #5d594b;
   --carimbo: #8a2c1f;
   --musgo: #4d5b43;
+  --terminal: #1f2420;
+  --terminal-texto: #d8e0c8;
+  --terminal-apagado: #8c9681;
+  --aviso: #c99a3b;
   --mono: 'IBM Plex Mono', 'Cascadia Mono', Consolas, monospace;
   color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
@@ -14,8 +24,230 @@ body {
   font-family: Georgia, 'Times New Roman', serif;
 }
 
-.provisorio {
-  max-width: 40rem;
-  margin: 4rem auto;
-  padding-inline: 1rem;
+pre,
+code,
+textarea {
+  font-family: var(--mono);
+}
+
+.bancada {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22rem;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 1rem;
+  height: 100vh;
+  padding: 1rem;
+}
+
+.carregando {
+  display: grid;
+  place-items: center;
+}
+
+.cabecalho {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  border-bottom: 2px solid var(--tinta);
+  padding-bottom: 0.5rem;
+}
+
+.cabecalho h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.subtitulo {
+  color: var(--tinta-suave);
+  font-style: italic;
+  flex: 1;
+}
+
+button {
+  font: inherit;
+  background: var(--tinta);
+  color: var(--papel);
+  border: 0;
+  padding: 0.35rem 0.8rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--carimbo);
+}
+
+.terminal {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--terminal);
+  color: var(--terminal-texto);
+  border-radius: 4px;
+  box-shadow: 0 2px 0 var(--papel-escuro);
+}
+
+.rolagem {
+  flex: 1;
+  overflow: auto;
+  padding: 0.75rem 1rem;
+}
+
+.rolagem pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.85rem;
+}
+
+.dica {
+  color: var(--terminal-apagado);
+}
+
+.dica code {
+  color: var(--terminal-texto);
+}
+
+.bloco {
+  margin-bottom: 0.75rem;
+}
+
+.comando {
+  color: #9fd49a;
+}
+
+.linha.info pre {
+  color: var(--terminal-apagado);
+}
+
+.linha.print pre {
+  color: #e8d9a8;
+}
+
+.linha.erro pre {
+  color: #f08c7a;
+}
+
+.traducao {
+  margin: 0.2rem 0 0;
+  color: var(--aviso);
+  font-family: Georgia, serif;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+}
+
+.prompt {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  border-top: 1px solid #39413a;
+  padding: 0.5rem 0.75rem;
+}
+
+.prompt span {
+  color: #9fd49a;
+  font-family: var(--mono);
+  padding-top: 0.3rem;
+}
+
+.prompt textarea {
+  flex: 1;
+  resize: none;
+  background: transparent;
+  color: var(--terminal-texto);
+  border: 0;
+  outline: none;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.lateral {
+  overflow: auto;
+  min-height: 0;
+}
+
+.lateral h2 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border-bottom: 1px solid var(--tinta-suave);
+  margin: 0 0 0.5rem;
+}
+
+.colecoes {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.colecoes li {
+  padding: 0.3rem 0;
+  border-bottom: 1px dashed var(--papel-escuro);
+}
+
+.colecoes span {
+  color: var(--tinta-suave);
+  font-size: 0.85rem;
+}
+
+.selo {
+  margin-left: 0.4rem;
+  border: 1px solid var(--carimbo);
+  color: var(--carimbo) !important;
+  padding: 0 0.3rem;
+  font-size: 0.7rem !important;
+  text-transform: uppercase;
+}
+
+.log {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.log li {
+  padding: 0.35rem 0;
+  border-bottom: 1px dashed var(--papel-escuro);
+}
+
+.log pre {
+  margin: 0.25rem 0 0;
+  font-size: 0.7rem;
+  white-space: pre-wrap;
+  color: var(--tinta-suave);
+}
+
+.nivel {
+  font-family: var(--mono);
+  font-weight: bold;
+}
+
+.nivel-W .nivel {
+  color: var(--aviso);
+}
+
+.nivel-E .nivel {
+  color: var(--carimbo);
+}
+
+.componente {
+  font-family: var(--mono);
+  color: var(--musgo);
+}
+
+.vazio {
+  color: var(--tinta-suave);
+  font-style: italic;
+}
+
+@media (max-width: 800px) {
+  .bancada {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(60vh, 1fr) auto;
+    height: auto;
+  }
 }
