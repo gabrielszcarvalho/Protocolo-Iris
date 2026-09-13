@@ -37,7 +37,11 @@ export function App() {
     })();
   }, []);
 
-  useEffect(() => fimRef.current?.scrollIntoView({ block: 'end' }), [blocos]);
+  // Chaves obrigatórias: scrollIntoView pode devolver Promise em navegadores novos, e o React
+  // interpretaria o retorno como função de limpeza.
+  useEffect(() => {
+    fimRef.current?.scrollIntoView({ block: 'end' });
+  }, [blocos]);
 
   if (!sessao) return <main className="bancada carregando">Abrindo o arquivo…</main>;
   const db: Database = sessao.db;
