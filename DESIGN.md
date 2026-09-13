@@ -74,10 +74,15 @@ Concentrada no **Arquivo Morto**, para o jogador aprender a desconfiar de um set
 
 ### 2.4 Tipos numéricos (decisão técnica)
 
-No mongosh, `5` é **double**. Para `$type: "int"` e `bsonType: "int"` fazerem sentido, a engine
-guarda inteiros criados via `NumberInt()`/`NumberLong()` com marca de tipo (transparente para
-comparação e aritmética). O seed usa `NumberInt`; literais digitados pelo jogador são `double`,
-**igual ao mongosh real** — a pegadinha que aparece na prática em 7.1.
+A engine segue a regra do **mongosh moderno** (que usa o driver Node): número JS inteiro na
+faixa de 32 bits é gravado como `int`, inteiro maior vira `long`, número com parte fracionária é
+`double`. Não há wrapper — os valores continuam `number` puros, o que mantém o mingo funcionando
+sem adaptações. `NumberInt()`/`NumberLong()` existem no terminal e truncam o valor.
+
+Consequência didática (pegadinha real, explorada em 7.1): `{ creditos: 500 }` é `int`, então um
+validador com `bsonType: "double"` **rejeita** 500. A solução correta é `bsonType: "number"` ou
+`["int", "double"]`. Limitação conhecida: `NumberDecimal` vira `double` e inteiros acima de 2^53
+perdem precisão.
 
 ---
 
