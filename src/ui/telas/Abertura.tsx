@@ -67,14 +67,14 @@ export function Abertura() {
         Pular (Esc)
       </button>
 
-      <AnimatePresence mode="wait">
+      {/* Sem esperar animação de saída: a troca de carta é imediata mesmo com a aba em segundo plano. */}
+      <AnimatePresence initial={false}>
         <motion.article
           key={indice}
           className="abertura-carta papel"
-          initial={{ opacity: 0, y: 24, rotate: -1.5 }}
+          initial={{ opacity: 0.4, y: 16, rotate: -1.5 }}
           animate={{ opacity: 1, y: 0, rotate: indice % 2 ? 0.8 : -0.6 }}
-          exit={{ opacity: 0, y: -24 }}
-          transition={{ duration: 0.45 }}
+          transition={{ duration: 0.35 }}
         >
           <p className="abertura-rotulo">{carta.rotulo}</p>
           <p className="abertura-texto">
