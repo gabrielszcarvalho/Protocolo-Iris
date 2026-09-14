@@ -1,4 +1,5 @@
 import type { Validador } from '../validacao';
+import type { Objetivo } from '../objetivos';
 
 export interface Missao {
   id: string;
@@ -7,8 +8,8 @@ export interface Missao {
   assunto: string;
   /** Narrativa curta. Trechos entre `crases` viram código na tela. */
   corpo: string;
-  /** Lista objetiva do que precisa ser entregue. */
-  objetivos: string[];
+  /** O que precisa ser entregue. Cada item tem sua conferência (os quadradinhos do memorando). */
+  objetivos: Objetivo[];
   /** Código carregado automaticamente no terminal quando o memorando é aberto (ex.: `const lote = [...]`). */
   anexo?: { variavel: string; codigo: string };
   /** Credenciais (ids da árvore) necessárias. Usado para avisar o jogador, nunca para validar. */

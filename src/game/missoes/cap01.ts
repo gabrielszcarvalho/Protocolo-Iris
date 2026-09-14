@@ -1,18 +1,36 @@
 import type { Capitulo } from './tipos';
 import { validarConsulta, validarEscrita } from '../validacao';
+import {
+  algumaE,
+  camposComoReferencia,
+  contagemNoArquivo,
+  mesmasFichas,
+  numUnicoComando,
+  numeroCerto,
+  objetivo,
+  registrou,
+  respostaCompleta,
+  semCampo,
+  somenteCampos,
+  todas,
+  umDocumentoSo,
+  umaFichaNovaSoCom,
+} from '../objetivos';
+import { IDS } from '../mundo';
+import { canonico } from '../../engine/bson';
 
 export const capitulo1: Capitulo = {
   numero: 1,
   titulo: 'Admissão',
   fase: 1,
-  abertura: 'Primeiro dia. Só o Limbo e o Purgatório estão abertos — o resto do prédio segue interditado desde o incêndio.',
+  abertura: 'Primeiro dia depois da morte. Só o Limbo e o Purgatório estão abertos — o resto do prédio segue interditado desde que a caldeira do Inferno explodiu.',
   missoes: [
     {
       id: '1.1',
       titulo: 'Primeiro expediente',
       assunto: 'Conferência do que sobrou',
       corpo: 'Antes de qualquer coisa, a Diretoria precisa saber o que sobreviveu ao incêndio. Liste todas as fichas da coleção `almas`.',
-      objetivos: ['Listar todos os documentos da coleção almas.'],
+      objetivos: [objetivo('Listar todos os documentos da coleção almas, com todos os campos.', respostaCompleta)],
       requer: [],
       tipo: 'consulta',
       validar: validarConsulta({ colecao: 'almas' }),
@@ -31,7 +49,11 @@ export const capitulo1: Capitulo = {
       titulo: 'Papelada mínima',
       assunto: 'Relação enxuta para a Correspondência',
       corpo: 'O Setor de Correspondência quer uma relação de todas as almas com apenas o nome e o setor. Eles não sabem ler o `_id` — tire.',
-      objetivos: ['Todas as almas.', 'Somente os campos nome e setor.', 'Sem o campo _id.'],
+      objetivos: [
+        objetivo('Todas as almas.', mesmasFichas),
+        objetivo('Somente os campos nome e setor.', somenteCampos(['nome', 'setor'])),
+        objetivo('Sem o campo _id.', semCampo('_id')),
+      ],
       requer: [],
       tipo: 'consulta',
       validar: validarConsulta({ colecao: 'almas' }),
@@ -53,7 +75,10 @@ export const capitulo1: Capitulo = {
       titulo: 'Ficha sem gordura',
       assunto: 'Fichas do Purgatório para despacho',
       corpo: 'O Purgatório pediu as fichas completas das suas almas, mas o papel está caro: mande tudo, MENOS `endereco` e `audiencias`.',
-      objetivos: ['Somente almas do setor Purgatório.', 'Todos os campos, exceto endereco e audiencias.'],
+      objetivos: [
+        objetivo('Todas as almas do setor Purgatório, e só elas.', mesmasFichas),
+        objetivo('Todos os campos, exceto endereco e audiencias.', camposComoReferencia),
+      ],
       requer: [],
       tipo: 'consulta',
       validar: validarConsulta({ colecao: 'almas' }),
@@ -76,7 +101,10 @@ export const capitulo1: Capitulo = {
       titulo: 'A ficha do antecessor',
       assunto: 'Boato no corredor',
       corpo: 'Dizem que apareceu no Limbo uma ficha com o nome do seu antecessor, `Aurélio Vilaverde`. A Diretoria quer essa ficha em mãos — a ficha em si, não uma lista.',
-      objetivos: ['Devolver o documento de Aurélio Vilaverde.', 'Um documento só (não uma lista).'],
+      objetivos: [
+        objetivo('Devolver o documento de Aurélio Vilaverde.', algumaE((d) => canonico(d._id) === canonico(IDS.aurelio))),
+        objetivo('Um documento só (não uma lista).', umDocumentoSo),
+      ],
       requer: ['leitura-rapida'],
       tipo: 'consulta',
       validar: validarConsulta({ colecao: 'almas' }),
@@ -98,7 +126,7 @@ export const capitulo1: Capitulo = {
       titulo: 'Censo do Purgatório',
       assunto: 'Pedido do Setor de Estatística',
       corpo: 'Quantas almas estão no Purgatório? O Setor de Estatística não aceita lista: quer um número.',
-      objetivos: ['Devolver a quantidade de almas do setor Purgatório.'],
+      objetivos: [objetivo('Devolver a quantidade (um número) de almas do setor Purgatório.', numeroCerto)],
       requer: ['recenseamento'],
       tipo: 'consulta',
       validar: validarConsulta({ colecao: 'almas' }),
@@ -120,7 +148,13 @@ export const capitulo1: Capitulo = {
       titulo: 'Ficha de entrada',
       assunto: 'Alma recém-chegada',
       corpo: 'Uma alma acabou de chegar ao balcão. Registre a ficha com exatamente estes dados — nem mais, nem menos.',
-      objetivos: ["protocolo: 'A-1953-0101'", "nome: 'Gaspar Mendonça'", "setor: 'Limbo'", "pendencia: 'Relógio não devolvido'"],
+      objetivos: [
+        objetivo("protocolo: 'A-1953-0101'", registrou({ protocolo: 'A-1953-0101' })),
+        objetivo("nome: 'Gaspar Mendonça'", registrou({ nome: 'Gaspar Mendonça' })),
+        objetivo("setor: 'Limbo'", registrou({ setor: 'Limbo' })),
+        objetivo("pendencia: 'Relógio não devolvido'", registrou({ pendencia: 'Relógio não devolvido' })),
+        objetivo('Uma ficha só, sem nenhum campo além desses.', umaFichaNovaSoCom(['protocolo', 'nome', 'setor', 'pendencia'])),
+      ],
       requer: ['protocolo-de-entrada'],
       tipo: 'escrita',
       validar: validarEscrita({ colecao: 'almas' }),
@@ -142,7 +176,12 @@ export const capitulo1: Capitulo = {
       titulo: 'Lote da madrugada',
       assunto: 'Três chegadas de uma vez',
       corpo: 'Chegaram três almas durante a madrugada. A Diretoria quer as três registradas num ÚNICO despacho — comando por comando é desperdício de carimbo.',
-      objetivos: ["{ nome: 'Celeste Amaral', setor: 'Purgatório' }", "{ nome: 'Honório Rangel', setor: 'Limbo' }", "{ nome: 'Quitéria Xavier', setor: 'Limbo' }", 'Tudo num único comando.'],
+      objetivos: [
+        objetivo("{ nome: 'Celeste Amaral', setor: 'Purgatório' }", registrou({ nome: 'Celeste Amaral', setor: 'Purgatório' })),
+        objetivo("{ nome: 'Honório Rangel', setor: 'Limbo' }", registrou({ nome: 'Honório Rangel', setor: 'Limbo' })),
+        objetivo("{ nome: 'Quitéria Xavier', setor: 'Limbo' }", registrou({ nome: 'Quitéria Xavier', setor: 'Limbo' })),
+        objetivo('Tudo num único comando insertMany.', numUnicoComando('insertMany')),
+      ],
       requer: ['despacho-em-lote'],
       tipo: 'escrita',
       validar: validarEscrita({
@@ -170,7 +209,13 @@ export const capitulo1: Capitulo = {
       titulo: 'O lote reenviado',
       assunto: 'Correspondência mandou de novo',
       corpo: 'A Correspondência reenviou um lote de cinco fichas. Uma delas já está no arquivo (mesmo `_id`) e o servidor vai reclamar. As outras quatro precisam entrar mesmo assim. O lote já está no seu terminal, na variável `lote`.',
-      objetivos: ['Registrar as quatro fichas novas do lote.', 'A ficha repetida continua uma só.'],
+      objetivos: [
+        objetivo(
+          'Registrar as quatro fichas novas do lote.',
+          todas(...['A-1953-0201', 'A-1953-0203', 'A-1953-0204', 'A-1953-0205'].map((protocolo) => registrou({ protocolo }))),
+        ),
+        objetivo('A ficha repetida (Odorico Paz) continua uma só.', contagemNoArquivo((d) => d.nome === 'Odorico Paz', 1)),
+      ],
       anexo: {
         variavel: 'lote',
         codigo: [

@@ -1,5 +1,10 @@
 import type { Capitulo } from './tipos';
 import { validarConsulta } from '../validacao';
+import { incluiTodasQue, mesmasFichas, nenhumaDeFora, objetivo, ordenadaPor, todas, todasSao } from '../objetivos';
+import { lerCaminho } from '../../engine/bson';
+
+type Doc = Record<string, unknown>;
+const anos = (d: Doc) => (typeof d.anos_pendentes === 'number' ? d.anos_pendentes : NaN);
 
 const consulta = validarConsulta({ colecao: 'almas' });
 
@@ -7,14 +12,17 @@ export const capitulo2: Capitulo = {
   numero: 2,
   titulo: 'Triagem',
   fase: 2,
-  abertura: 'Acharam caixas no porão: 292 fichas foram digitadas às pressas durante a noite. Todos os setores foram reabertos. Ler ficha por ficha deixou de ser opção.',
+  abertura: 'Acharam caixas chamuscadas no porão, colado às caldeiras do Inferno: 292 fichas foram digitadas às pressas durante a noite. Todos os setores foram reabertos. Ler ficha por ficha deixou de ser opção.',
   missoes: [
     {
       id: '2.1',
       titulo: 'Quem está no Limbo',
       assunto: 'Chamada do Limbo',
       corpo: 'Com o porão digitado, o Limbo lotou. Traga as fichas de todas as almas do setor Limbo.',
-      objetivos: ['Todas as almas do setor Limbo.'],
+      objetivos: [
+        objetivo('Somente almas do setor Limbo.', todasSao((d) => d.setor === 'Limbo')),
+        objetivo('Nenhuma alma do Limbo ficou de fora.', nenhumaDeFora),
+      ],
       requer: [],
       tipo: 'consulta',
       validar: consulta,
@@ -32,7 +40,10 @@ export const capitulo2: Capitulo = {
       titulo: 'Endereço conhecido',
       assunto: 'Visita ao bairro da Lapa',
       corpo: 'Um mensageiro vai à Lapa amanhã. Traga as almas cujo `bairro`, dentro de `endereco`, seja Lapa.',
-      objetivos: ['Almas com endereco.bairro igual a Lapa.'],
+      objetivos: [
+        objetivo('Somente almas com endereco.bairro igual a Lapa.', todasSao((d) => lerCaminho(d, 'endereco.bairro') === 'Lapa')),
+        objetivo('Nenhuma alma da Lapa ficou de fora.', nenhumaDeFora),
+      ],
       requer: [],
       tipo: 'consulta',
       validar: consulta,
@@ -51,7 +62,10 @@ export const capitulo2: Capitulo = {
       titulo: 'Pendências antigas',
       assunto: 'Casos crônicos',
       corpo: 'A Diretoria quer as almas com MAIS de 60 anos de pendência (`anos_pendentes`). Exatamente 60 não entra.',
-      objetivos: ['Almas com anos_pendentes maior que 60.'],
+      objetivos: [
+        objetivo('Somente almas com anos_pendentes maior que 60 (60 não entra).', todasSao((d) => anos(d) > 60)),
+        objetivo('Nenhuma com mais de 60 anos ficou de fora.', nenhumaDeFora),
+      ],
       requer: ['regua-de-comparacao'],
       tipo: 'consulta',
       validar: consulta,
@@ -66,7 +80,11 @@ export const capitulo2: Capitulo = {
       titulo: 'A faixa exata',
       assunto: 'Revisão por década',
       corpo: 'O Purgatório vai revisar as almas com pendência entre 10 e 20 anos — incluindo 10 e 20.',
-      objetivos: ['Setor Purgatório.', 'anos_pendentes de 10 a 20, inclusive.'],
+      objetivos: [
+        objetivo('Somente almas do setor Purgatório.', todasSao((d) => d.setor === 'Purgatório')),
+        objetivo('Somente anos_pendentes de 10 a 20.', todasSao((d) => anos(d) >= 10 && anos(d) <= 20)),
+        objetivo('Incluindo quem tem exatamente 10 ou 20 — nenhuma de fora.', nenhumaDeFora),
+      ],
       requer: ['regua-de-comparacao'],
       tipo: 'consulta',
       validar: consulta,
@@ -88,7 +106,11 @@ export const capitulo2: Capitulo = {
       titulo: 'Tudo, menos o Limbo',
       assunto: 'Almas ativas fora do Limbo',
       corpo: 'Traga as almas ATIVAS (`ativo: true`) de qualquer setor, exceto o Limbo.',
-      objetivos: ['ativo igual a true.', 'setor diferente de Limbo.'],
+      objetivos: [
+        objetivo('Somente almas com ativo: true.', todasSao((d) => d.ativo === true)),
+        objetivo('Nenhuma do setor Limbo.', todasSao((d) => d.setor !== 'Limbo')),
+        objetivo('Nenhuma que se encaixe ficou de fora.', nenhumaDeFora),
+      ],
       requer: ['regua-de-comparacao'],
       tipo: 'consulta',
       validar: consulta,
@@ -103,7 +125,11 @@ export const capitulo2: Capitulo = {
       titulo: 'Ou um, ou outro',
       assunto: 'Relatório conjunto',
       corpo: 'A Ante-Sala e o Setor de Casos Crônicos vão dividir um relatório: entram as almas da Ante-Sala OU qualquer alma com mais de 85 anos de pendência.',
-      objetivos: ['setor Ante-Sala, OU', 'anos_pendentes maior que 85.'],
+      objetivos: [
+        objetivo('Todas as almas da Ante-Sala.', incluiTodasQue((d) => d.setor === 'Ante-Sala')),
+        objetivo('Todas as almas com mais de 85 anos de pendência, de qualquer setor.', incluiTodasQue((d) => anos(d) > 85)),
+        objetivo('Nenhuma outra além dessas.', todasSao((d) => d.setor === 'Ante-Sala' || anos(d) > 85)),
+      ],
       requer: ['logica-cartorial'],
       tipo: 'consulta',
       validar: consulta,
@@ -118,7 +144,11 @@ export const capitulo2: Capitulo = {
       titulo: 'Nem um, nem outro',
       assunto: 'Os esquecidos',
       corpo: 'Traga as almas que NÃO estão no Limbo e que também NÃO estão ativas. Nenhuma das duas coisas.',
-      objetivos: ['Nem setor Limbo, nem ativo: true.'],
+      objetivos: [
+        objetivo('Nenhuma alma do setor Limbo.', todasSao((d) => d.setor !== 'Limbo')),
+        objetivo('Nenhuma alma com ativo: true.', todasSao((d) => d.ativo !== true)),
+        objetivo('Todas as que sobram, nenhuma de fora.', nenhumaDeFora),
+      ],
       requer: ['logica-cartorial'],
       tipo: 'consulta',
       validar: consulta,
@@ -133,7 +163,11 @@ export const capitulo2: Capitulo = {
       titulo: 'Plantão duplo',
       assunto: 'Escala do fim de semana',
       corpo: 'O plantão cobre almas do Limbo ou do Purgatório que, além disso, tenham mais de 70 anos de pendência ou estejam inativas. São dois "ou" ao mesmo tempo.',
-      objetivos: ['(setor Limbo OU Purgatório) E', '(anos_pendentes > 70 OU ativo: false).'],
+      objetivos: [
+        objetivo('Somente almas do Limbo ou do Purgatório…', todasSao((d) => d.setor === 'Limbo' || d.setor === 'Purgatório')),
+        objetivo('…que também tenham anos_pendentes > 70 ou ativo: false.', todasSao((d) => anos(d) > 70 || d.ativo === false)),
+        objetivo('Nenhuma que se encaixe ficou de fora.', nenhumaDeFora),
+      ],
       requer: ['logica-cartorial'],
       tipo: 'consulta',
       validar: consulta,
@@ -158,7 +192,11 @@ export const capitulo2: Capitulo = {
       titulo: 'Lista fechada',
       assunto: 'Pendências sensíveis',
       corpo: 'Traga as almas com pendência `Dívida de jogo`, `Herança disputada` ou `Segredo de família` — mas que NÃO estejam no Arquivo Morto nem na Correspondência.',
-      objetivos: ['pendencia em uma das três da lista.', 'setor fora de Arquivo Morto e Correspondência.'],
+      objetivos: [
+        objetivo('Somente pendências da lista.', todasSao((d) => ['Dívida de jogo', 'Herança disputada', 'Segredo de família'].includes(d.pendencia as string))),
+        objetivo('Nenhuma do Arquivo Morto ou da Correspondência.', todasSao((d) => d.setor !== 'Arquivo Morto' && d.setor !== 'Correspondência')),
+        objetivo('Nenhuma que se encaixe ficou de fora.', nenhumaDeFora),
+      ],
       requer: ['lista-oficial'],
       tipo: 'consulta',
       validar: consulta,
@@ -174,7 +212,13 @@ export const capitulo2: Capitulo = {
       titulo: 'Fichas rasgadas',
       assunto: 'CEPs perdidos',
       corpo: 'Os Correios do além devolveram cartas. Traga as almas que não têm o campo `cep` dentro de `endereco` — inclusive as que nem têm endereço.',
-      objetivos: ['Almas sem endereco.cep.'],
+      objetivos: [
+        objetivo(
+          'Todas as almas que têm endereço, mas sem cep.',
+          todas(todasSao((d) => lerCaminho(d, 'endereco.cep') === undefined), incluiTodasQue((d) => 'endereco' in d && lerCaminho(d, 'endereco.cep') === undefined)),
+        ),
+        objetivo('E também as que nem têm endereço.', incluiTodasQue((d) => !('endereco' in d))),
+      ],
       requer: ['pericia-de-fichas'],
       tipo: 'consulta',
       validar: consulta,
@@ -189,7 +233,10 @@ export const capitulo2: Capitulo = {
       titulo: 'Tipo errado',
       assunto: 'Digitação apressada',
       corpo: 'Alguém digitou `anos_pendentes` como texto ("37" em vez de 37) em várias fichas. Encontre todas.',
-      objetivos: ['Almas cujo anos_pendentes é do tipo string.'],
+      objetivos: [
+        objetivo('Somente almas com anos_pendentes gravado como texto (string).', todasSao((d) => typeof d.anos_pendentes === 'string')),
+        objetivo('Nenhuma delas ficou de fora.', nenhumaDeFora),
+      ],
       requer: ['pericia-de-fichas'],
       tipo: 'consulta',
       validar: consulta,
@@ -204,7 +251,11 @@ export const capitulo2: Capitulo = {
       titulo: 'Fila do balcão',
       assunto: 'Atendimento por ordem de chegada',
       corpo: 'O balcão atende as almas do Limbo pela data de falecimento, da mais antiga para a mais recente, 10 por página. Os atendentes já passaram pelas páginas 1 e 2. Entregue a página 3, na ordem.',
-      objetivos: ['Almas do Limbo.', 'Ordenadas por falecimento crescente.', 'Página 3, com 10 fichas por página.'],
+      objetivos: [
+        objetivo('Somente almas do Limbo.', todasSao((d) => d.setor === 'Limbo')),
+        objetivo('Ordenadas por falecimento, da mais antiga para a mais recente.', ordenadaPor('falecimento', 1)),
+        objetivo('Exatamente a página 3 (10 fichas por página).', mesmasFichas),
+      ],
       requer: ['fila-organizada'],
       tipo: 'consulta',
       validar: validarConsulta({ colecao: 'almas', ordem: true }),

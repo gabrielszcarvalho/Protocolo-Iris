@@ -30,7 +30,7 @@ export interface ContextoValidacao {
   historicoMissao: RegistroOperacao[];
   mundoInicio: Database;
   mundo: Database;
-  referencia(): { valor: unknown; mundo: Database };
+  referencia(): { valor: unknown; mundo: Database; operacoes: RegistroOperacao[] };
 }
 
 export type Validador = (ctx: ContextoValidacao) => ResultadoValidacao;
@@ -46,7 +46,7 @@ export function montarContexto(p: {
   mundoInicio: Database;
   mundo: Database;
 }): ContextoValidacao {
-  let cache: { valor: unknown; mundo: Database } | undefined;
+  let cache: { valor: unknown; mundo: Database; operacoes: RegistroOperacao[] } | undefined;
   return {
     resultado: p.resultado,
     execucaoOk: p.execucaoOk,
@@ -60,7 +60,7 @@ export function montarContexto(p: {
         const sessao = new Sessao(base);
         if (p.anexo) sessao.executar(p.anexo);
         const r = sessao.executar(p.codigoReferencia);
-        cache = { valor: r.valor, mundo: base };
+        cache = { valor: r.valor, mundo: base, operacoes: r.operacoes };
       }
       return cache;
     },
