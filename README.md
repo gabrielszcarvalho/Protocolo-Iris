@@ -12,9 +12,12 @@ comandos vão sendo desbloqueados conforme você progride. Sem backend, sem rede
 
 1. **Memorandos** chegam da Diretoria: cada um é uma tarefa (listar fichas, contar, registrar…).
 2. Você escreve o comando no **terminal** e executa (`Ctrl+Enter`). A resposta aparece como no
-   mongosh, e a **planta do Departamento** acende as fichas encontradas ou alteradas.
-3. Quando a resposta confere, o memorando é **deferido** e rende **carimbos**. Dicas e protocolos
-   recusados reduzem o prêmio.
+   mongosh, e a **planta do Departamento** acende as fichas encontradas ou alteradas. Executar
+   não envia nada: analise se voltou mesmo o que foi pedido.
+3. Quando estiver seguro, clique em **Protocolar resposta** (`Ctrl+Shift+Enter`). Se estiver certa,
+   o memorando é **deferido** e rende **carimbos**. Se não, volta indeferida com um parecer, e os
+   quadradinhos de "A entregar" mostram o que já estava certo (✓) e o que falta (✗). Dicas e
+   protocolos recusados reduzem o prêmio, mas nunca impedem de avançar.
 4. Na **Árvore de Credenciamento** você troca carimbos por comandos novos (`findOne`,
    `countDocuments`, `$gt`, `$elemMatch`…). Você começa só com o `find`.
 5. Ao terminar um capítulo, o arquivo cresce: novos setores abrem e centenas de fichas chegam.
