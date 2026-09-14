@@ -12,7 +12,7 @@ Legenda: ✅ implementado e testado · 🧪 simulado (sem servidor real por trá
 |---|---|---|
 | `find` | 1.1 | ✅ |
 | projeção inclusiva + `_id: 0` | 1.2, 8.2 | ✅ |
-| filtro por igualdade | 1.3, 2.1 | ✅ |
+| filtro por igualdade + projeção exclusiva | 1.3, 2.1 | ✅ |
 | `findOne` | 1.4 | ✅ |
 | `countDocuments` | 1.5 | ✅ |
 | `insertOne` | 1.6 | ✅ |
