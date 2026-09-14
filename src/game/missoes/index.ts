@@ -1,11 +1,12 @@
 import { capitulo1 } from './cap01';
 import { capitulo2 } from './cap02';
 import { capitulo3 } from './cap03';
+import { capitulo4 } from './cap04';
 import type { Capitulo, Missao } from './tipos';
 
 export type { Capitulo, Missao } from './tipos';
 
-export const CAPITULOS: Capitulo[] = [capitulo1, capitulo2, capitulo3];
+export const CAPITULOS: Capitulo[] = [capitulo1, capitulo2, capitulo3, capitulo4];
 
 export const TODAS_AS_MISSOES: Missao[] = CAPITULOS.flatMap((c) => c.missoes);
 
