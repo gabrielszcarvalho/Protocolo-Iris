@@ -1,5 +1,6 @@
 import { Jogo } from '../../src/game/jogo';
 import { CAPITULOS } from '../../src/game/missoes';
+import { NO_POR_ID } from '../../src/game/arvore';
 
 function concluirComReferencia(jogo: Jogo) {
   const missao = jogo.missaoAtual!;
@@ -98,6 +99,39 @@ describe('Jogo', () => {
     }
     expect(jogo.conteudoConcluido).toBe(true);
     expect(ultimo!.eventos).toContainEqual({ tipo: 'fim-do-conteudo' });
+  });
+
+  it('mesmo com 1 estrela em todos os memorandos, os carimbos sempre bastam', () => {
+    const jogo = Jogo.novo();
+    for (let i = 0; i < 100 && jogo.missaoAtual; i++) {
+      const missao = jogo.missaoAtual;
+      for (const no of jogo.credenciaisFaltando(missao)) {
+        expect(jogo.comprar(no.id), `${missao.id}: faltou carimbo para ${no.nome}`).toMatchObject({ ok: true });
+      }
+      jogo.revelarDica();
+      jogo.revelarDica();
+      jogo.revelarDica();
+      expect(jogo.executar(missao.solucaoReferencia).eventos[0]).toMatchObject({ tipo: 'missao-concluida', estrelas: 1 });
+    }
+    expect(jogo.conteudoConcluido).toBe(true);
+  });
+
+  it('nenhuma ordem de compra deixa o jogador sem saída (pior caso calculado)', () => {
+    // Em cada capítulo, supõe o pior: 1 estrela em tudo e compras que rendem menos do que custam
+    // feitas primeiro. O saldo ainda precisa pagar a credencial mais cara que o capítulo exige.
+    let saldoMinimo = 0;
+    for (const capitulo of CAPITULOS) {
+      const nos = [...new Set(capitulo.missoes.flatMap((m) => m.requer))].map((id) => NO_POR_ID.get(id)!);
+      const livres = capitulo.missoes.filter((m) => m.requer.length === 0).reduce((s, m) => s + m.recompensa, 0);
+      const prejuizos = nos.reduce((s, no) => {
+        const rende = capitulo.missoes.filter((m) => m.requer.includes(no.id)).reduce((t, m) => t + m.recompensa, 0);
+        return s + Math.min(0, rende - no.custo);
+      }, 0);
+      const maisCara = Math.max(0, ...nos.map((n) => n.custo));
+      expect(saldoMinimo + livres + prejuizos, `capítulo ${capitulo.numero}`).toBeGreaterThanOrEqual(maisCara);
+      saldoMinimo += capitulo.missoes.reduce((s, m) => s + m.recompensa, 0) - nos.reduce((s, n) => s + n.custo, 0);
+      expect(saldoMinimo, `saldo ao fim do capítulo ${capitulo.numero}`).toBeGreaterThanOrEqual(0);
+    }
   });
 
   it('salvar e carregar preserva progresso, mundo e credenciais', () => {
