@@ -1,6 +1,6 @@
 import { Database } from '../../src/engine/database';
 import { ObjectId } from '../../src/engine/bson';
-import { MongoBulkWriteError, MongoServerError, ErroShell } from '../../src/engine/errors';
+import { MongoBulkWriteError, MongoServerError, ErroShell, CredencialError } from '../../src/engine/errors';
 import { estagiosDoPipeline } from '../../src/engine/credenciais';
 
 function mundo() {
@@ -455,10 +455,13 @@ describe('estado do mundo', () => {
     expect(erroDe(() => volta.colecao('protocolos').insertOne({})).code).toBe(121);
   });
 
-  it('credencial bloqueia antes de executar', () => {
+  it('verificador bloqueia antes de executar e não é copiado em clones', () => {
     const db = mundo();
-    db.capitulo = 1;
+    db.verificador = (op) => {
+      if (op.metodo === 'deleteMany') throw new CredencialError('deleteMany', 'Expurgo');
+    };
     expect(erroDe(() => db.colecao('almas').deleteMany({})).name).toBe('CredencialError');
+    expect(db.clonar().colecao('almas').deleteMany({}).deletedCount).toBe(4);
     expect(db.colecao('almas').countDocuments({})).toBe(4);
   });
 });

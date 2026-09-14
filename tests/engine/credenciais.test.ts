@@ -1,10 +1,4 @@
-import {
-  operadoresDaOperacao,
-  estagiosDoPipeline,
-  verificarCredencial,
-  capituloDoOperador,
-} from '../../src/engine/credenciais';
-import { CredencialError } from '../../src/engine/errors';
+import { operadoresDaOperacao, estagiosDoPipeline, chavesDaOperacao, chaveDoOperador } from '../../src/engine/credenciais';
 
 describe('credenciais', () => {
   it('coleta operadores de filtro, opções e regex literal', () => {
@@ -27,16 +21,14 @@ describe('credenciais', () => {
     ).toEqual(['$match', '$match', '$group']);
   });
 
-  it('$sort muda de capítulo conforme o contexto', () => {
-    expect(capituloDoOperador('$sort', 'crud')).toBe(5);
-    expect(capituloDoOperador('$sort', 'agregacao')).toBe(8);
+  it('o mesmo nome vira outra credencial dentro de aggregate', () => {
+    expect(chaveDoOperador('$sort', 'crud')).toBe('$sort');
+    expect(chaveDoOperador('$sort', 'agregacao')).toBe('$sort@agregacao');
+    expect(chaveDoOperador('$gt', 'agregacao')).toBe('$gt');
   });
 
-  it('bloqueia operador de capítulo futuro', () => {
-    expect(() => verificarCredencial({ metodo: 'aggregate', args: [[{ $unwind: '$audiencias' }]] }, 9)).toThrow(CredencialError);
-    expect(() => verificarCredencial({ metodo: 'find', args: [{ setor: 'Limbo' }] }, 1)).not.toThrow();
-    expect(() => verificarCredencial({ metodo: 'find', args: [{ anos: { $gt: 1 } }] }, 1)).toThrow(
-      /'\$gt' não consta no seu nível de credenciamento \(exige: Capítulo 2\)/,
-    );
+  it('chavesDaOperacao remove repetições e mantém a ordem', () => {
+    const chaves = chavesDaOperacao({ metodo: 'aggregate', args: [[{ $match: { a: { $gt: 1 }, b: { $gt: 2 } } }, { $sort: { a: 1 } }]] });
+    expect(chaves.map((c) => c.chave)).toEqual(['aggregate', '$match', '$gt', '$sort@agregacao']);
   });
 });

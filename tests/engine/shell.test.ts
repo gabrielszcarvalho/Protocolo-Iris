@@ -1,5 +1,6 @@
 import { Sessao, dividirInstrucoes } from '../../src/engine/shell';
 import { Database } from '../../src/engine/database';
+import { CredencialError } from '../../src/engine/errors';
 
 function sessao() {
   const db = new Database();
@@ -133,10 +134,12 @@ describe('Sessao', () => {
     expect(s.executar('db.almas.docs').valor).toBeUndefined();
   });
 
-  it('credencial do capítulo aparece como erro diegético', () => {
+  it('credencial não comprada aparece como erro diegético', () => {
     const s = sessao();
-    s.db.capitulo = 1;
+    s.db.verificador = (op) => {
+      if (op.metodo === 'aggregate') throw new CredencialError('aggregate', 'Relatórios I');
+    };
     const r = s.executar("db.almas.aggregate([{ $match: { setor: 'Limbo' } }])");
-    expect(r.saida[0].texto).toBe("CredencialError: Comando 'aggregate' não consta no seu nível de credenciamento (exige: Capítulo 8).");
+    expect(r.saida[0].texto).toBe("CredencialError: Comando 'aggregate' não consta no seu nível de credenciamento (requer: Relatórios I).");
   });
 });

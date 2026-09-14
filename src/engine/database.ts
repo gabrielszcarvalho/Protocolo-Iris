@@ -6,7 +6,7 @@
 import { clonar, deEJSON, ehObjetoSimples, paraEJSON } from './bson';
 import { Colecao, type AcaoValidacao, type NivelValidacao, type OpcoesColecao } from './collection';
 import { erros } from './errors';
-import { CAPITULO_SANDBOX, verificarCredencial, type Operacao } from './credenciais';
+import type { Operacao } from './credenciais';
 import { criarQuery } from './mingoCtx';
 import type { Plano } from './explain';
 import type { DefinicaoIndice } from './indexes';
@@ -40,14 +40,17 @@ export class Database {
   private readonly colecoes = new Map<string, Colecao>();
   readonly log: EntradaLog[] = [];
   readonly historico: RegistroOperacao[] = [];
-  /** Capítulo liberado para o jogador. No sandbox, tudo liberado. */
-  capitulo = CAPITULO_SANDBOX;
+  /**
+   * Gancho do jogo: lança erro (ex.: CredencialError) se a operação não for permitida.
+   * Sem verificador, tudo é permitido.
+   */
+  verificador?: (op: Operacao) => void;
 
   // --- infraestrutura -------------------------------------------------------
 
-  /** Chamado no início de toda operação: checa credencial e registra no histórico. */
+  /** Chamado no início de toda operação: checa permissão e registra no histórico. */
   inspecionar(op: Operacao): RegistroOperacao {
-    verificarCredencial(op, this.capitulo);
+    this.verificador?.(op);
     const registro: RegistroOperacao = { ...op, args: clonar(op.args), quando: Date.now() };
     this.historico.push(registro);
     return registro;
@@ -204,8 +207,8 @@ export class Database {
 
   /** Cópia profunda independente — usada para mundoAntes/mundoDepois e para o sandbox. */
   clonar(): Database {
+    // O verificador NÃO é copiado: clones servem para simulação e soluções de referência.
     const copia = new Database();
-    copia.capitulo = this.capitulo;
     for (const [nome, col] of this.colecoes) {
       const nova = new Colecao(nome, copia);
       nova.carregar(col.docs.map(clonar), col.definicoesDeIndice().map(clonar), clonar(col.opcoes));

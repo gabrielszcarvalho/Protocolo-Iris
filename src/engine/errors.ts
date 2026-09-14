@@ -49,18 +49,21 @@ export class MongoBulkWriteError extends ErroShell {
   }
 }
 
-/** Erro diegético: operador ainda não liberado para o capítulo atual. */
+/** Erro diegético: comando ainda não comprado na Árvore de Credenciamento. */
 export class CredencialError extends ErroShell {
-  constructor(operador: string, capitulo: number) {
+  readonly operador: string;
+  readonly credencial: string;
+
+  constructor(operador: string, credencial: string) {
     super(
       'CredencialError',
-      `Comando '${operador}' não consta no seu nível de credenciamento (exige: Capítulo ${capitulo}).`,
+      `Comando '${operador}' não consta no seu nível de credenciamento (requer: ${credencial}).`,
       {
-        traducao:
-          'O Departamento ainda não liberou esse recurso para você. Conclua os memorandos ' +
-          'pendentes para receber a credencial.',
+        traducao: `Compre a credencial "${credencial}" na Árvore de Credenciamento para usar ${operador}.`,
       },
     );
+    this.operador = operador;
+    this.credencial = credencial;
   }
 }
 
