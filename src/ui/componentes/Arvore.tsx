@@ -68,7 +68,7 @@ export function Arvore() {
                     >
                       <span className="no-nome">{n.nome}</span>
                       <span className="no-chaves">{n.libera.map((l) => l.chave.replace('@agregacao', '')).join(' ')}</span>
-                      <span className="no-rodape">{s === 'possui' ? '✓ concedida' : s === 'lacrado' ? 'em breve' : `${n.custo} carimbos`}</span>
+                      <span className="no-rodape">{s === 'possui' ? '✓ concedida' : s === 'lacrado' ? (n.disponivel ? `abre no cap. ${n.capitulo}` : 'em breve') : `${n.custo} carimbos`}</span>
                     </button>
                   );
                 })}
@@ -79,7 +79,7 @@ export function Arvore() {
           <aside className="no-detalhe papel">
             <p className="no-ramo">{no.ramo}</p>
             <h3>{no.nome}</h3>
-            <p className={`no-situacao s-${situacao}`}>{ROTULO[situacao]}</p>
+            <p className={`no-situacao s-${situacao}`}>{situacao === 'lacrado' && no.disponivel ? `Abre no Capítulo ${no.capitulo} · ${no.custo} carimbos` : ROTULO[situacao]}</p>
             <p>{no.descricao}</p>
             {no.requer.length > 0 && (
               <p className="no-requer">

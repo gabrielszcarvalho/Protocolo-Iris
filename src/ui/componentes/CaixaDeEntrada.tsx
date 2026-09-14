@@ -29,7 +29,11 @@ export function CaixaDeEntrada() {
                   const estrelas = jogo.progresso.concluidas[m.id]?.estrelas ?? 0;
                   return (
                     <li key={m.id}>
-                      <button className={`item-missao ${situacao} ${m.id === atual ? 'atual' : ''}`} onClick={() => c.selecionarMissao(m.id)}>
+                      <button
+                        className={`item-missao ${situacao} ${m.id === atual ? 'atual' : ''}`}
+                        onClick={() => c.selecionarMissao(m.id)}
+                        title={situacao === 'aguardando' ? `Aguardando o memorando ${jogo.aguardandoPor(m).map((x) => x.id).join(', ')}` : undefined}
+                      >
                         <span className="item-icone">{ICONE[situacao]}</span>
                         <span className="item-id">{m.id}</span>
                         <span className="item-titulo">{m.titulo}</span>
@@ -43,12 +47,6 @@ export function CaixaDeEntrada() {
           </section>
         );
       })}
-      <section className="fechado">
-        <h3>
-          <span>4–12. Retificação, Anexos, Regulamento, Relatórios…</span>
-          <span>em breve</span>
-        </h3>
-      </section>
     </nav>
   );
 }

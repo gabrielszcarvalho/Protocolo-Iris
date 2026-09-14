@@ -22,7 +22,10 @@ export function Memorando() {
     return (
       <article className="memorando papel vazio" data-tutorial="memorando">
         <h2>Caixa vazia</h2>
-        <p>Todos os memorandos desta versão foram despachados. A Diretoria prepara os próximos capítulos — sem pressa, ninguém aqui vai a lugar nenhum.</p>
+        <p>
+          Todos os memorandos foram despachados. O arquivo continua aberto: releia o Manual, treine na Sala de Treino ou encare o Expediente
+          contra o relógio (no Menu).
+        </p>
       </article>
     );
   }
