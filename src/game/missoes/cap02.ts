@@ -21,7 +21,7 @@ export const capitulo2: Capitulo = {
       corpo: 'Com o porão digitado, o Limbo lotou. Traga as fichas de todas as almas do setor Limbo.',
       objetivos: [
         objetivo('Somente almas do setor Limbo.', todasSao((d) => d.setor === 'Limbo')),
-        objetivo('Nenhuma alma do Limbo ficou de fora.', nenhumaDeFora),
+        objetivo('Nenhuma alma do Limbo ficou de fora.', nenhumaDeFora()),
       ],
       requer: [],
       tipo: 'consulta',
@@ -42,7 +42,7 @@ export const capitulo2: Capitulo = {
       corpo: 'Um mensageiro vai à Lapa amanhã. Traga as almas cujo `bairro`, dentro de `endereco`, seja Lapa.',
       objetivos: [
         objetivo('Somente almas com endereco.bairro igual a Lapa.', todasSao((d) => lerCaminho(d, 'endereco.bairro') === 'Lapa')),
-        objetivo('Nenhuma alma da Lapa ficou de fora.', nenhumaDeFora),
+        objetivo('Nenhuma alma da Lapa ficou de fora.', nenhumaDeFora()),
       ],
       requer: [],
       tipo: 'consulta',
@@ -64,7 +64,7 @@ export const capitulo2: Capitulo = {
       corpo: 'A Diretoria quer as almas com MAIS de 60 anos de pendência (`anos_pendentes`). Exatamente 60 não entra.',
       objetivos: [
         objetivo('Somente almas com anos_pendentes maior que 60 (60 não entra).', todasSao((d) => anos(d) > 60)),
-        objetivo('Nenhuma com mais de 60 anos ficou de fora.', nenhumaDeFora),
+        objetivo('Nenhuma com mais de 60 anos ficou de fora.', nenhumaDeFora()),
       ],
       requer: ['regua-de-comparacao'],
       tipo: 'consulta',
@@ -83,7 +83,7 @@ export const capitulo2: Capitulo = {
       objetivos: [
         objetivo('Somente almas do setor Purgatório.', todasSao((d) => d.setor === 'Purgatório')),
         objetivo('Somente anos_pendentes de 10 a 20.', todasSao((d) => anos(d) >= 10 && anos(d) <= 20)),
-        objetivo('Incluindo quem tem exatamente 10 ou 20 — nenhuma de fora.', nenhumaDeFora),
+        objetivo('Incluindo quem tem exatamente 10 ou 20 — nenhuma de fora.', nenhumaDeFora()),
       ],
       requer: ['regua-de-comparacao'],
       tipo: 'consulta',
@@ -109,7 +109,7 @@ export const capitulo2: Capitulo = {
       objetivos: [
         objetivo('Somente almas com ativo: true.', todasSao((d) => d.ativo === true)),
         objetivo('Nenhuma do setor Limbo.', todasSao((d) => d.setor !== 'Limbo')),
-        objetivo('Nenhuma que se encaixe ficou de fora.', nenhumaDeFora),
+        objetivo('Nenhuma que se encaixe ficou de fora.', nenhumaDeFora()),
       ],
       requer: ['regua-de-comparacao'],
       tipo: 'consulta',
@@ -147,7 +147,7 @@ export const capitulo2: Capitulo = {
       objetivos: [
         objetivo('Nenhuma alma do setor Limbo.', todasSao((d) => d.setor !== 'Limbo')),
         objetivo('Nenhuma alma com ativo: true.', todasSao((d) => d.ativo !== true)),
-        objetivo('Todas as que sobram, nenhuma de fora.', nenhumaDeFora),
+        objetivo('Todas as que sobram, nenhuma de fora.', nenhumaDeFora()),
       ],
       requer: ['logica-cartorial'],
       tipo: 'consulta',
@@ -166,7 +166,7 @@ export const capitulo2: Capitulo = {
       objetivos: [
         objetivo('Somente almas do Limbo ou do Purgatório…', todasSao((d) => d.setor === 'Limbo' || d.setor === 'Purgatório')),
         objetivo('…que também tenham anos_pendentes > 70 ou ativo: false.', todasSao((d) => anos(d) > 70 || d.ativo === false)),
-        objetivo('Nenhuma que se encaixe ficou de fora.', nenhumaDeFora),
+        objetivo('Nenhuma que se encaixe ficou de fora.', nenhumaDeFora()),
       ],
       requer: ['logica-cartorial'],
       tipo: 'consulta',
@@ -195,7 +195,7 @@ export const capitulo2: Capitulo = {
       objetivos: [
         objetivo('Somente pendências da lista.', todasSao((d) => ['Dívida de jogo', 'Herança disputada', 'Segredo de família'].includes(d.pendencia as string))),
         objetivo('Nenhuma do Arquivo Morto ou da Correspondência.', todasSao((d) => d.setor !== 'Arquivo Morto' && d.setor !== 'Correspondência')),
-        objetivo('Nenhuma que se encaixe ficou de fora.', nenhumaDeFora),
+        objetivo('Nenhuma que se encaixe ficou de fora.', nenhumaDeFora()),
       ],
       requer: ['lista-oficial'],
       tipo: 'consulta',
@@ -235,7 +235,7 @@ export const capitulo2: Capitulo = {
       corpo: 'Alguém digitou `anos_pendentes` como texto ("37" em vez de 37) em várias fichas. Encontre todas.',
       objetivos: [
         objetivo('Somente almas com anos_pendentes gravado como texto (string).', todasSao((d) => typeof d.anos_pendentes === 'string')),
-        objetivo('Nenhuma delas ficou de fora.', nenhumaDeFora),
+        objetivo('Nenhuma delas ficou de fora.', nenhumaDeFora()),
       ],
       requer: ['pericia-de-fichas'],
       tipo: 'consulta',
@@ -254,7 +254,7 @@ export const capitulo2: Capitulo = {
       objetivos: [
         objetivo('Somente almas do Limbo.', todasSao((d) => d.setor === 'Limbo')),
         objetivo('Ordenadas por falecimento, da mais antiga para a mais recente.', ordenadaPor('falecimento', 1)),
-        objetivo('Exatamente a página 3 (10 fichas por página).', mesmasFichas),
+        objetivo('Exatamente a página 3 (10 fichas por página).', mesmasFichas()),
       ],
       requer: ['fila-organizada'],
       tipo: 'consulta',

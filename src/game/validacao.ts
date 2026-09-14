@@ -180,6 +180,20 @@ export interface OpcoesConsulta {
   ordem?: boolean;
   /** Diagnóstico extra específico da missão, para os documentos a mais. */
   explicarExtras?: (extras: Doc[]) => string | undefined;
+  /** Campos-lista comparados sem considerar a ordem (ex.: resultado de $addToSet). */
+  conjuntos?: string[];
+  /** Exigência extra sobre COMO a resposta foi obtida (ex.: "use dois $match"). Retorna a mensagem se não cumprida. */
+  exigir?: (ctx: ContextoValidacao) => string | undefined;
+}
+
+function normalizarConjuntos(valor: unknown, campos: string[] | undefined): unknown {
+  if (!campos?.length || !Array.isArray(valor)) return valor;
+  return valor.map((d) => {
+    if (!ehObjetoSimples(d)) return d;
+    const copia = { ...d };
+    for (const c of campos) if (Array.isArray(copia[c])) copia[c] = [...(copia[c] as unknown[])].sort((a, b) => (canonico(a) < canonico(b) ? -1 : 1));
+    return copia;
+  });
 }
 
 function descrever(v: unknown): string {
@@ -290,7 +304,15 @@ export function compararResultado(obtido: unknown, esperado: unknown, opts: Opco
 }
 
 export function validarConsulta(opts: OpcoesConsulta): Validador {
-  return (ctx) => compararResultado(ctx.resultado, ctx.referencia().valor, { ...opts, mundo: ctx.mundo });
+  return (ctx) => {
+    const r = compararResultado(normalizarConjuntos(ctx.resultado, opts.conjuntos), normalizarConjuntos(ctx.referencia().valor, opts.conjuntos), {
+      ...opts,
+      mundo: ctx.mundo,
+    });
+    if (!r.ok) return r;
+    const falta = opts.exigir?.(ctx);
+    return falta ? { ok: false, motivo: falta } : r;
+  };
 }
 
 // ---------------------------------------------------------------------------

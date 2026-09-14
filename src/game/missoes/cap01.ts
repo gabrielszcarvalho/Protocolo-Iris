@@ -50,7 +50,7 @@ export const capitulo1: Capitulo = {
       assunto: 'Relação enxuta para a Correspondência',
       corpo: 'O Setor de Correspondência quer uma relação de todas as almas com apenas o nome e o setor. Eles não sabem ler o `_id` — tire.',
       objetivos: [
-        objetivo('Todas as almas.', mesmasFichas),
+        objetivo('Todas as almas.', mesmasFichas()),
         objetivo('Somente os campos nome e setor.', somenteCampos(['nome', 'setor'])),
         objetivo('Sem o campo _id.', semCampo('_id')),
       ],
@@ -76,7 +76,7 @@ export const capitulo1: Capitulo = {
       assunto: 'Fichas do Purgatório para despacho',
       corpo: 'O Purgatório pediu as fichas completas das suas almas, mas o papel está caro: mande tudo, MENOS `endereco` e `audiencias`.',
       objetivos: [
-        objetivo('Todas as almas do setor Purgatório, e só elas.', mesmasFichas),
+        objetivo('Todas as almas do setor Purgatório, e só elas.', mesmasFichas()),
         objetivo('Todos os campos, exceto endereco e audiencias.', camposComoReferencia),
       ],
       requer: [],

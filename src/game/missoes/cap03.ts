@@ -21,7 +21,7 @@ export const capitulo3: Capitulo = {
       corpo: 'Traga as almas que têm `contrabandista` entre os seus vínculos. Pode haver outros vínculos junto.',
       objetivos: [
         objetivo('Somente almas com contrabandista entre os vínculos.', todasSao((d) => vinculos(d).includes('contrabandista'))),
-        objetivo('Inclusive as que têm outros vínculos junto.', todas(nenhumaDeFora, incluiTodasQue((d) => vinculos(d).includes('contrabandista') && vinculos(d).length > 1))),
+        objetivo('Inclusive as que têm outros vínculos junto.', todas(nenhumaDeFora(), incluiTodasQue((d) => vinculos(d).includes('contrabandista') && vinculos(d).length > 1))),
       ],
       requer: [],
       tipo: 'consulta',
@@ -43,7 +43,7 @@ export const capitulo3: Capitulo = {
       corpo: 'O Sarau do Além quer as almas que são `mãe` E `poeta` ao mesmo tempo, em qualquer ordem no array.',
       objetivos: [
         objetivo('Somente almas que são mãe E poeta.', todasSao((d) => vinculos(d).includes('mãe') && vinculos(d).includes('poeta'))),
-        objetivo('Em qualquer ordem, com ou sem outros vínculos — nenhuma de fora.', nenhumaDeFora),
+        objetivo('Em qualquer ordem, com ou sem outros vínculos — nenhuma de fora.', nenhumaDeFora()),
       ],
       requer: ['inventario-de-vinculos'],
       tipo: 'consulta',
@@ -64,7 +64,7 @@ export const capitulo3: Capitulo = {
       corpo: 'Traga as almas com exatamente 4 vínculos.',
       objetivos: [
         objetivo('Somente almas com exatamente 4 vínculos.', todasSao((d) => vinculos(d).length === 4)),
-        objetivo('Nenhuma com 4 vínculos ficou de fora.', nenhumaDeFora),
+        objetivo('Nenhuma com 4 vínculos ficou de fora.', nenhumaDeFora()),
       ],
       requer: ['inventario-de-vinculos'],
       tipo: 'consulta',
@@ -81,7 +81,7 @@ export const capitulo3: Capitulo = {
       assunto: 'Pareceres pesados',
       corpo: 'Traga as almas que tiveram UMA audiência com parecer `C` e peso acima de 30 — as duas coisas na MESMA audiência.',
       objetivos: [
-        objetivo('Todas as almas com uma audiência de parecer C e peso acima de 30…', nenhumaDeFora),
+        objetivo('Todas as almas com uma audiência de parecer C e peso acima de 30…', nenhumaDeFora()),
         objetivo('…com as duas coisas na MESMA audiência.', todasSao((d) => audiencias(d).some((a) => a.parecer === 'C' && a.peso > 30))),
       ],
       requer: ['lupa-de-audiencias'],

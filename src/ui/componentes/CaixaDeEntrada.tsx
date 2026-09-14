@@ -1,7 +1,7 @@
 import { useControlador } from '../controlador';
 import { CAPITULOS } from '../../game/missoes';
 
-const ICONE = { concluida: '✓', disponivel: '•', 'falta-credencial': '🔒', fechada: '' } as const;
+const ICONE = { concluida: '✓', disponivel: '•', 'falta-credencial': '🔒', aguardando: '⏳', fechada: '' } as const;
 
 export function CaixaDeEntrada() {
   const c = useControlador();

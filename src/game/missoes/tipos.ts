@@ -14,6 +14,8 @@ export interface Missao {
   anexo?: { variavel: string; codigo: string };
   /** Credenciais (ids da árvore) necessárias. Usado para avisar o jogador, nunca para validar. */
   requer: string[];
+  /** Memorandos que precisam estar deferidos antes (quando um depende do estado deixado pelo outro). */
+  depoisDe?: string[];
   tipo: 'consulta' | 'escrita';
   validar: Validador;
   solucaoReferencia: string;
