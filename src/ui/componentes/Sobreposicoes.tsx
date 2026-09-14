@@ -101,19 +101,47 @@ export function Sobreposicoes() {
           )}
 
           {atual.tipo === 'fim' && (
-            <motion.div className="cartao capitulo" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
-              <p className="cartao-sobre">Fim do expediente desta versão</p>
-              <h2>O arquivo agradece</h2>
+            <motion.div className="cartao capitulo epilogo" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+              <p className="cartao-sobre">Protocolo B-1953-0000 · deferido</p>
+              <h2>O relatório de Aurélio</h2>
               <p className="capitulo-texto">
-                Você despachou todos os memorandos disponíveis. A Diretoria está preparando a Retificação, os Anexos, o Regulamento e os
-                Relatórios. Até lá, o arquivo segue aberto para consultas — os mortos têm tempo.
+                O Conselho carimbou sua Prova e, no mesmo despacho, encerrou a ficha mais antiga do Limbo: Aurélio Vilaverde, o arquivista
+                que morreu em 1953 com um “relatório não entregue”. O relatório era este arquivo — organizado, validado, replicado e
+                finalmente legível. Quem o terminou foi você.
+              </p>
+              <p className="capitulo-texto">
+                Aurélio passa pela sua mesa com o chapéu na mão, agradece com um aceno e entra no elevador. A seta acende: ↑ Céu. A sua
+                ficha, dizem, também já pode subir. Mas alguém precisa cuidar do arquivo — e os mortos continuam chegando.
               </p>
               <p className="capitulo-meta">
-                {jogo.progresso.estatisticas.comandos} comandos · {jogo.progresso.estatisticas.carimbosGanhos} carimbos ganhos
+                {Object.keys(jogo.progresso.concluidas).length} memorandos · {jogo.progresso.estatisticas.comandos} comandos ·{' '}
+                {jogo.progresso.estatisticas.carimbosGanhos} carimbos ganhos ·{' '}
+                {Object.values(jogo.progresso.concluidas).filter((m) => m.estrelas === 3).length} com três estrelas
               </p>
-              <button className="botao principal largo" onClick={() => c.fecharSobreposicao()} autoFocus>
-                Continuar no arquivo
-              </button>
+              <p className="creditos">Protocolo Íris · escrito, programado e carimbado por Gabriel de Souza Carvalho · disciplina de Banco de Dados NoSQL</p>
+              <div className="epilogo-acoes">
+                <button className="botao principal" onClick={() => c.fecharSobreposicao()} autoFocus>
+                  Ficar no arquivo
+                </button>
+                <button
+                  className="botao"
+                  onClick={() => {
+                    c.fecharSobreposicao();
+                    c.entrarNoExpediente();
+                  }}
+                >
+                  Expediente contra o relógio
+                </button>
+                <button
+                  className="botao"
+                  onClick={() => {
+                    c.fecharSobreposicao();
+                    c.entrarNoTreino();
+                  }}
+                >
+                  Sala de Treino
+                </button>
+              </div>
             </motion.div>
           )}
         </motion.div>

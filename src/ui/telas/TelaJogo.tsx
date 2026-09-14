@@ -12,6 +12,8 @@ import { Sobreposicoes } from '../componentes/Sobreposicoes';
 import { Menu } from '../componentes/Menu';
 import { ARVORE } from '../../game/arvore';
 import { Logo } from '../componentes/Logo';
+import { PainelTreino } from '../componentes/PainelTreino';
+import { PainelExpediente } from '../componentes/PainelExpediente';
 
 export function TelaJogo() {
   const c = useControlador();
@@ -47,7 +49,8 @@ export function TelaJogo() {
           <div>
             <strong>Protocolo Íris</strong>
             <span>
-              Purgatório, 3º subsolo · Capítulo {capitulo.numero} · {capitulo.titulo}
+              Purgatório, 3º subsolo ·{' '}
+              {c.modo === 'treino' ? 'Sala de Treino (cópia do arquivo)' : c.modo === 'expediente' ? 'Expediente contra o relógio' : `Capítulo ${capitulo.numero} · ${capitulo.titulo}`}
             </span>
           </div>
         </div>
@@ -110,8 +113,14 @@ export function TelaJogo() {
         </section>
 
         <aside className="coluna-memorando">
-          <Memorando />
-          <CaixaDeEntrada />
+          {c.modo === 'treino' && <PainelTreino />}
+          {c.modo === 'expediente' && <PainelExpediente />}
+          {c.modo === 'campanha' && (
+            <>
+              <Memorando />
+              <CaixaDeEntrada />
+            </>
+          )}
         </aside>
       </main>
 

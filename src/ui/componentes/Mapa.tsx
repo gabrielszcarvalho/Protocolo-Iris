@@ -13,7 +13,7 @@ const DESCRICAO: Record<Setor, string> = {
 export function Mapa() {
   const c = useControlador();
   const jogo = c.jogo!;
-  const docs = jogo.mundo.colecao('almas').docs;
+  const docs = c.mundo.colecao('almas').docs;
   const abertos = new Set(FASES[jogo.progresso.fase - 1].setoresAbertos);
   const { encontrados, inseridos, alterados } = c.destaque;
   const marcas = useMemo(

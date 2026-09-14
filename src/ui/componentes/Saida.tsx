@@ -12,7 +12,7 @@ const ABAS: { id: AbaSaida; rotulo: string }[] = [
 export function Saida() {
   const c = useControlador();
   const fim = useRef<HTMLDivElement>(null);
-  const log = c.jogo!.mundo.log;
+  const log = c.mundo.log;
 
   useEffect(() => {
     fim.current?.scrollIntoView({ block: 'end' });

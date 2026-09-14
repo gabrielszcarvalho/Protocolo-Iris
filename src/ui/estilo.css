@@ -2263,3 +2263,120 @@ kbd {
     border-top: 1px solid #3d362c;
   }
 }
+
+/* ------------------------------------------------------------------ Sala de Treino e Expediente */
+
+.painel-modo {
+  border-top: 4px solid var(--musgo);
+}
+
+.alternador {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin: 0.8rem 0;
+  padding: 0.6rem 0.7rem;
+  background: rgba(77, 91, 67, 0.12);
+  border-left: 3px solid var(--musgo);
+  cursor: pointer;
+}
+
+.alternador input {
+  margin-top: 0.2rem;
+  accent-color: var(--musgo);
+}
+
+.alternador strong,
+.alternador small {
+  display: block;
+}
+
+.alternador small {
+  color: var(--tinta-2);
+  font-size: 0.8rem;
+}
+
+.lista-colecoes li {
+  justify-content: space-between;
+}
+
+.lista-colecoes li span {
+  color: var(--tinta-3);
+  font-size: 0.8rem;
+}
+
+.relogio {
+  margin: 0.4rem 0 0.2rem;
+  font-family: var(--mono);
+  font-size: 2.2rem;
+  letter-spacing: 0.05em;
+  text-align: center;
+  color: var(--tinta);
+}
+
+.relogio.acabando {
+  color: var(--carimbo);
+  animation: pulsar-relogio 1s ease-in-out infinite;
+}
+
+@keyframes pulsar-relogio {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.placar-grande {
+  margin: 0.6rem 0;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.placar-grande strong {
+  display: block;
+  font-size: 3rem;
+  color: var(--carimbo);
+}
+
+.fichario-colecoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.6rem;
+}
+
+.fichario-colecoes button {
+  padding: 0.2rem 0.6rem;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--terminal-apagado);
+  background: var(--terminal-2);
+  border: 1px solid var(--terminal-borda);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.fichario-colecoes button.ativa {
+  color: var(--terminal-texto);
+  border-color: var(--verde);
+}
+
+.fichario-colecoes small {
+  opacity: 0.7;
+}
+
+.epilogo .capitulo-texto + .capitulo-texto {
+  margin-top: -0.4rem;
+}
+
+.creditos {
+  font-size: 0.8rem;
+  color: var(--papel-3);
+  opacity: 0.8;
+}
+
+.epilogo-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}

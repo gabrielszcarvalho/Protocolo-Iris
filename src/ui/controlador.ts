@@ -14,11 +14,19 @@ import { Armazenamento } from '../engine/persist';
 import { som } from './som';
 import { AVISOS, PASSOS_TUTORIAL, type AvisoContextual } from './tutorialDados';
 import { inferirEsquema } from './inferencia';
+import { TODAS_AS_MISSOES } from '../game/missoes';
+import { TODAS_AS_CREDENCIAIS } from '../game/arvore';
+import { Expediente, SalaDeTreino } from '../game/treino';
+import type { Database } from '../engine/database';
+import type { ResultadoExecucao } from '../engine/shell';
+import { CredencialError } from '../engine/errors';
 import type { Sugestoes } from './componentes/Editor';
 
 export type Tela = 'carregando' | 'titulo' | 'abertura' | 'jogo';
 export type Painel = 'arvore' | 'manual' | 'menu' | null;
 export type AbaSaida = 'resultado' | 'log' | 'fichario';
+/** campanha: memorandos valendo carimbo; treino e expediente: numa cópia do arquivo. */
+export type Modo = 'campanha' | 'treino' | 'expediente';
 
 export interface BlocoSaida {
   id: number;
@@ -82,6 +90,12 @@ export class Controlador {
   somLigado = true;
   pedidoEditor?: { id: number; texto: string };
   credencialEmFoco?: string;
+  modo: Modo = 'campanha';
+  treino?: SalaDeTreino;
+  expediente?: Expediente;
+  parecerExpediente?: { missaoId: string; validacao: ResultadoValidacao; marcas: boolean[] };
+  resumoExpediente?: { deferidos: number; pulados: number; recorde: boolean };
+  private blocosCampanha: BlocoSaida[] = [];
 
   // --- infraestrutura de assinatura -----------------------------------------
 
@@ -161,6 +175,7 @@ export class Controlador {
   }
 
   voltarAoTitulo() {
+    this.restaurarCampanha();
     this.painel = null;
     this.tutorial = null;
     this.aviso = null;
@@ -204,11 +219,24 @@ export class Controlador {
     const texto = (codigo ?? this.textoEditor).trim();
     if (!jogo || !texto) return;
 
+    if (this.modo !== 'campanha') {
+      const bancada = this.modo === 'treino' ? this.treino : this.expediente;
+      if (!bancada || this.resumoExpediente) return;
+      const t = bancada.executar(texto);
+      this.registrarBloco(texto, t.execucao);
+      this.destaque = t.destaque;
+      if (!t.execucao.ok) som.erro();
+      if (t.execucao.erro instanceof CredencialError) {
+        this.adicionarToast(`Esse comando exige a credencial “${t.execucao.erro.credencial}”. Na Sala de Treino, dá para liberar todas.`);
+      }
+      this.salvar();
+      this.mudou();
+      return;
+    }
+
     const r = jogo.executar(texto);
-    this.blocos = r.execucao.limparTela ? [] : [...this.blocos.slice(-50), { id: ++this.seq, comando: texto, linhas: r.execucao.saida }];
-    this.historico = [...this.historico.filter((h) => h !== texto), texto].slice(-100);
+    this.registrarBloco(texto, r.execucao);
     this.destaque = r.destaque;
-    this.aba = 'resultado';
     this.ultimaExecucaoOk = r.execucao.ok && r.execucao.operacoes.length > 0;
     if (this.conferencia && r.execucao.operacoes.length) this.conferencia.desatualizada = true;
 
@@ -223,7 +251,15 @@ export class Controlador {
   }
 
   /** Envia a última resposta para conferência. */
+  private registrarBloco(texto: string, execucao: ResultadoExecucao) {
+    this.blocos = execucao.limparTela ? [] : [...this.blocos.slice(-50), { id: ++this.seq, comando: texto, linhas: execucao.saida }];
+    this.historico = [...this.historico.filter((h) => h !== texto), texto].slice(-100);
+    this.aba = 'resultado';
+  }
+
   protocolar() {
+    if (this.modo === 'expediente') return this.protocolarNoExpediente();
+    if (this.modo === 'treino') return;
     const jogo = this.jogo;
     const missao = jogo?.missaoAtual;
     if (!jogo || !missao) return;
@@ -339,6 +375,132 @@ export class Controlador {
     this.mudou();
   }
 
+  // --- Sala de Treino e Expediente ------------------------------------------------
+
+  /** Memorandos de consulta já deferidos: o Expediente precisa de pelo menos 3. */
+  get consultasDeferidas() {
+    const jogo = this.jogo;
+    return jogo ? Expediente.elegiveis(TODAS_AS_MISSOES.filter((m) => jogo.concluida(m))) : [];
+  }
+
+  /** O arquivo que o terminal, o mapa e o fichário estão mostrando agora. */
+  get mundo(): Database {
+    if (this.modo === 'treino' && this.treino) return this.treino.mundo;
+    if (this.modo === 'expediente' && this.expediente) return this.expediente.mundo;
+    return this.jogo!.mundo;
+  }
+
+  private get credenciaisDoModo(): ReadonlySet<string> {
+    if (this.modo === 'treino' && this.treino) return this.treino.possui;
+    if (this.modo === 'expediente') return TODAS_AS_CREDENCIAIS;
+    return this.jogo?.possui ?? new Set();
+  }
+
+  private entrarNoModo(modo: Exclude<Modo, 'campanha'>) {
+    if (this.modo === 'campanha') this.blocosCampanha = this.blocos;
+    this.modo = modo;
+    this.blocos = [];
+    this.painel = null;
+    this.aviso = null;
+    this.tutorial = null;
+    this.aba = 'resultado';
+    this.tela = 'jogo';
+    this.parecerExpediente = undefined;
+    this.resumoExpediente = undefined;
+    this.limparMemorando();
+  }
+
+  private restaurarCampanha() {
+    if (this.modo === 'campanha') return;
+    this.modo = 'campanha';
+    this.treino = undefined;
+    this.expediente = undefined;
+    this.parecerExpediente = undefined;
+    this.resumoExpediente = undefined;
+    this.blocos = this.blocosCampanha;
+    this.destaque = SEM_DESTAQUE;
+  }
+
+  entrarNoTreino() {
+    const jogo = this.jogo;
+    if (!jogo) return;
+    this.entrarNoModo('treino');
+    this.treino = new SalaDeTreino(jogo.mundo, () => jogo.possui);
+    som.clique();
+    this.mudou();
+  }
+
+  entrarNoExpediente() {
+    const jogo = this.jogo;
+    if (!jogo || this.consultasDeferidas.length < 3) return;
+    this.entrarNoModo('expediente');
+    this.expediente = new Expediente(jogo.mundo, this.consultasDeferidas);
+    som.clique();
+    this.mudou();
+  }
+
+  voltarACampanha() {
+    this.restaurarCampanha();
+    this.painel = null;
+    this.mudou();
+    this.verificarAvisos();
+  }
+
+  alternarTodasCredenciais() {
+    if (!this.treino) return;
+    this.treino.todasAsCredenciais = !this.treino.todasAsCredenciais;
+    this.mudou();
+  }
+
+  reiniciarTreino() {
+    if (!this.treino) return;
+    this.treino.reiniciar();
+    this.blocos = [...this.blocos, { id: ++this.seq, comando: '(restaurar cópia)', linhas: [{ tipo: 'info', texto: 'A cópia do arquivo voltou ao estado em que a Sala de Treino foi aberta.' }] }];
+    this.destaque = SEM_DESTAQUE;
+    this.mudou();
+  }
+
+  private protocolarNoExpediente() {
+    const exp = this.expediente;
+    const missao = exp?.missao;
+    if (!exp || !missao || this.resumoExpediente) return;
+    if (exp.restanteMs() === 0) return this.encerrarExpediente();
+    const r = exp.protocolar();
+    if (r.validacao.ok) {
+      som.carimbo();
+      this.adicionarToast(`Deferido: ${missao.titulo}. Próximo memorando!`);
+      this.parecerExpediente = undefined;
+      this.blocos = [];
+      this.destaque = SEM_DESTAQUE;
+    } else {
+      som.indeferido();
+      this.parecerExpediente = { missaoId: missao.id, ...r };
+    }
+    this.mudou();
+  }
+
+  pularDesafio() {
+    if (!this.expediente || this.resumoExpediente) return;
+    this.expediente.pular();
+    this.parecerExpediente = undefined;
+    this.blocos = [];
+    this.destaque = SEM_DESTAQUE;
+    this.mudou();
+  }
+
+  encerrarExpediente() {
+    const exp = this.expediente;
+    const jogo = this.jogo;
+    if (!exp || !jogo || this.resumoExpediente) return;
+    exp.encerrado = true;
+    const recorde = exp.deferidos > jogo.progresso.recordeExpediente;
+    if (recorde) jogo.progresso.recordeExpediente = exp.deferidos;
+    this.resumoExpediente = { deferidos: exp.deferidos, pulados: exp.pulados, recorde };
+    if (recorde) som.desbloqueio();
+    this.salvar();
+    this.mudou();
+  }
+
   // --- tutorial e avisos --------------------------------------------------------
 
   private checarTutorial() {
@@ -376,7 +538,7 @@ export class Controlador {
 
   verificarAvisos() {
     const jogo = this.jogo;
-    if (!jogo || this.tela !== 'jogo' || this.tutorial !== null || this.fila.length || this.painel || this.aviso) return;
+    if (!jogo || this.tela !== 'jogo' || this.modo !== 'campanha' || this.tutorial !== null || this.fila.length || this.painel || this.aviso) return;
     const missao = jogo.missaoAtual;
     if (missao && jogo.situacaoMissao(missao) === 'falta-credencial') this.mostrarAviso('credencial-faltando');
     else if (missao?.anexo) this.mostrarAviso('anexo');
@@ -402,13 +564,19 @@ export class Controlador {
   sugestoes(): Sugestoes {
     const jogo = this.jogo;
     if (!jogo) return { colecoes: [], metodosColecao: [], metodosCursor: [], operadores: [], campos: [] };
-    const chaves = ARVORE.filter((n) => jogo.possui.has(n.id)).flatMap((n) => n.libera.map((l) => l.chave));
-    const docs = jogo.mundo.colecao('almas').docs;
-    if (!this.cacheCampos || this.cacheCampos.total !== docs.length) {
-      this.cacheCampos = { total: docs.length, campos: inferirEsquema(docs).map((c) => c.caminho).filter((c) => c !== '_id') };
+    const possui = this.credenciaisDoModo;
+    const chaves = ARVORE.filter((n) => possui.has(n.id)).flatMap((n) => n.libera.map((l) => l.chave));
+    // Campos de todas as coleções (almas, arquivistas, protocolos, requerimentos...), sem repetir.
+    const mundo = this.mundo;
+    const nomes = mundo.nomesDasColecoes();
+    const total = nomes.reduce((s, n) => s + mundo.colecao(n).docs.length, 0) * 31 + nomes.length;
+    if (!this.cacheCampos || this.cacheCampos.total !== total) {
+      const campos = new Set(nomes.flatMap((n) => inferirEsquema(mundo.colecao(n).docs).map((c) => c.caminho)));
+      campos.delete('_id');
+      this.cacheCampos = { total, campos: [...campos] };
     }
     return {
-      colecoes: jogo.mundo.nomesDasColecoes(),
+      colecoes: nomes,
       metodosColecao: chaves.filter((c) => METODOS_DE_COLECAO.has(c)),
       metodosCursor: ['toArray', 'pretty', ...chaves.filter((c) => METODOS_DE_CURSOR.has(c))],
       operadores: chaves.filter((c) => c.startsWith('$') && !/[@[\s]/.test(c)),

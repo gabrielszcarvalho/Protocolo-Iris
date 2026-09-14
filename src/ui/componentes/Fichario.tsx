@@ -1,18 +1,31 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useControlador } from '../controlador';
 import { inferirEsquema } from '../inferencia';
 
 export function Fichario() {
   const c = useControlador();
-  const docs = c.jogo!.mundo.colecao('almas').docs;
+  const mundo = c.mundo;
+  const nomes = mundo.nomesDasColecoes();
+  const [escolhida, setEscolhida] = useState('almas');
+  const colecao = nomes.includes(escolhida) ? escolhida : (nomes[0] ?? 'almas');
+  const docs = mundo.colecao(colecao).docs;
   const versao = c.versaoAtual();
   const esquema = useMemo(() => inferirEsquema(docs), [docs, versao]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="fichario">
+      {nomes.length > 1 && (
+        <div className="fichario-colecoes" role="tablist" aria-label="Coleções">
+          {nomes.map((n) => (
+            <button key={n} role="tab" aria-selected={n === colecao} className={n === colecao ? 'ativa' : ''} onClick={() => setEscolhida(n)}>
+              {n} <small>{mundo.colecao(n).docs.length}</small>
+            </button>
+          ))}
+        </div>
+      )}
       <p className="fichario-intro">
-        Coleção <code>almas</code> · {docs.length} fichas. Campos encontrados, em quantas fichas aparecem e com que tipos. Clique num campo
-        para levá-lo ao terminal.
+        Coleção <code>{colecao}</code> · {docs.length} documentos. Campos encontrados, em quantos documentos aparecem e com que tipos. Clique
+        num campo para levá-lo ao terminal.
       </p>
       <table>
         <thead>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useControlador } from '../controlador';
 import { Logo } from '../componentes/Logo';
+import { CAPITULOS, TODAS_AS_MISSOES } from '../../game/missoes';
 
 const FICHAS = Array.from({ length: 12 }, (_, i) => ({
   esquerda: (i * 37) % 100,
@@ -72,6 +73,17 @@ export function TelaTitulo() {
         <button className={`botao-titulo ${c.temSave ? '' : 'principal'}`} onClick={novo} autoFocus={!c.temSave}>
           Novo expediente
         </button>
+        {c.temSave && (
+          <button
+            className="botao-titulo"
+            onClick={() => {
+              c.continuar();
+              c.entrarNoTreino();
+            }}
+          >
+            Sala de Treino
+          </button>
+        )}
         <button className="botao-titulo" onClick={() => c.alternarSom()}>
           Som: {c.somLigado ? 'ligado' : 'desligado'}
         </button>
@@ -80,7 +92,9 @@ export function TelaTitulo() {
         </button>
       </motion.nav>
 
-      <footer className="titulo-rodape">versão 0.3 · capítulos 1 a 3 · feito para a disciplina de Banco de Dados NoSQL</footer>
+      <footer className="titulo-rodape">
+        versão 1.0 · {CAPITULOS.length} capítulos · {TODAS_AS_MISSOES.length} memorandos · feito para a disciplina de Banco de Dados NoSQL
+      </footer>
 
       {confirmar && (
         <div className="dialogo-fundo" onClick={() => setConfirmar(false)}>
