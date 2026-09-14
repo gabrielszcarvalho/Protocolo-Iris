@@ -184,6 +184,42 @@ export interface OpcoesConsulta {
   conjuntos?: string[];
   /** Exigência extra sobre COMO a resposta foi obtida (ex.: "use dois $match"). Retorna a mensagem se não cumprida. */
   exigir?: (ctx: ContextoValidacao) => string | undefined;
+  /** Resultado de aggregate: o diagnóstico fala de linhas do relatório, não de fichas. */
+  relatorio?: boolean;
+}
+
+const linhas = (n: number) => `${n} linha${n === 1 ? '' : 's'}`;
+
+/** Valor numa linha só, curto o bastante para caber num parecer. */
+function compacto(v: unknown, profundidade = 0): string {
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  if (typeof v === 'string') return `'${v}'`;
+  if (typeof v === 'number') return String(Math.round(v * 100) / 100);
+  if (Array.isArray(v)) return profundidade > 1 ? '[…]' : `[${v.slice(0, 4).map((x) => compacto(x, profundidade + 1)).join(', ')}${v.length > 4 ? ', …' : ''}]`;
+  if (ehObjetoSimples(v)) return profundidade > 1 ? '{…}' : `{ ${Object.entries(v).map(([k, x]) => `${k}: ${compacto(x, profundidade + 1)}`).join(', ')} }`;
+  return String(v);
+}
+
+function diagnosticoDeRelatorio(obtido: unknown[], esperado: unknown[], extras: unknown[], faltantes: unknown[]): ResultadoValidacao {
+  if (!obtido.length) {
+    return { ok: false, motivo: `O relatório saiu vazio; esperava ${linhas(esperado.length)}. Algum estágio está barrando tudo: confira os filtros e a ordem dos estágios.` };
+  }
+  const partes = [
+    obtido.length === esperado.length
+      ? `O relatório tem o número certo de linhas (${obtido.length}), mas o conteúdo não bate.`
+      : `O relatório tem ${linhas(obtido.length)}; esperava ${esperado.length}.`,
+  ];
+  const certasPorId = new Map(faltantes.filter(ehObjetoSimples).filter((d) => '_id' in d).map((d) => [canonico(d._id), d]));
+  const par = extras.filter(ehObjetoSimples).map((d) => [d, '_id' in d ? certasPorId.get(canonico(d._id)) : undefined] as const).find(([, certa]) => certa);
+  if (par) {
+    const [sua, certa] = par as readonly [Doc, Doc];
+    const campos = [...new Set([...Object.keys(sua), ...Object.keys(certa)])].filter((k) => canonico(sua[k]) !== canonico(certa[k]));
+    partes.push(`Na linha de _id ${compacto(sua._id)}, confira ${campos.join(', ')} (veio ${campos.map((k) => `${k}: ${k in sua ? compacto(sua[k]) : '(ausente)'}`).join(', ')}).`);
+  } else if (ehObjetoSimples(extras[0])) {
+    partes.push(`Uma linha que não confere: ${compacto(extras[0])}.`);
+  }
+  partes.push('Dica de ofício: apague os últimos estágios e rode de novo para ver em que ponto a esteira desvia.');
+  return { ok: false, motivo: partes.join(' ') };
 }
 
 function normalizarConjuntos(valor: unknown, campos: string[] | undefined): unknown {
@@ -270,6 +306,10 @@ export function compararResultado(obtido: unknown, esperado: unknown, opts: Opco
       ok: false,
       motivo: `A quantidade está certa (${fichas(obtido.length)}), mas os campos não. Esperado: ${camposE.join(', ') || '(nenhum)'}. Veio: ${camposO.join(', ')}.`,
     };
+  }
+
+  if (opts.relatorio && lista.some((d) => ehObjetoSimples(d) && !('protocolo' in d))) {
+    return diagnosticoDeRelatorio(obtido, lista, extras, faltantes);
   }
 
   if (obtido.length === 0) {

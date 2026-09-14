@@ -9,7 +9,7 @@ export const feitoComAggregate = objetivo('Feito como relatório: db.almas.aggre
 
 /** Primeiro compara com a referência (para dar o diagnóstico), depois exige cada quadradinho. */
 export const relatorio = (objetivos: Objetivo[], opts: Partial<OpcoesConsulta> = {}) =>
-  validarPorObjetivos(objetivos, validarConsulta({ colecao: 'almas', ...opts }));
+  validarPorObjetivos(objetivos, validarConsulta({ colecao: 'almas', relatorio: true, ...opts }));
 
 /** Nenhum documento mostra campos além destes (fichas antigas podem não ter todos). */
 export const soComCampos = (campos: string[]) => (v: unknown) =>
