@@ -26,6 +26,8 @@ export interface Progresso {
   /** Avisos contextuais que o jogador já viu (para não repetir). */
   avisosVistos: string[];
   estatisticas: { comandos: number; erros: number; carimbosGanhos: number };
+  /** Maior número de memorandos deferidos num Expediente contra o relógio. */
+  recordeExpediente: number;
 }
 
 export function progressoInicial(): Progresso {
@@ -42,6 +44,7 @@ export function progressoInicial(): Progresso {
     tutorialConcluido: false,
     avisosVistos: [],
     estatisticas: { comandos: 0, erros: 0, carimbosGanhos: 0 },
+    recordeExpediente: 0,
   };
 }
 
@@ -73,13 +76,25 @@ export interface Save {
   inicioMissao?: SnapshotBanco;
 }
 
-function mapaAlmas(db: Database): Map<string, string> {
+export function mapaAlmas(db: Database): Map<string, string> {
   return new Map(db.colecao('almas').docs.map((d) => [String(d._id), canonico(d)]));
 }
 
 function idsDoValor(valor: unknown): string[] {
   const lista = Array.isArray(valor) ? valor : ehObjetoSimples(valor) ? [valor] : [];
   return lista.filter((d) => ehObjetoSimples(d) && '_id' in d).map((d) => String((d as Record<string, unknown>)._id));
+}
+
+/** Fichas encontradas, registradas, alteradas e removidas por um comando (para acender o mapa). */
+export function calcularDestaque(antes: Map<string, string>, mundo: Database, valor: unknown): Destaque {
+  const depois = mapaAlmas(mundo);
+  const destaque: Destaque = { encontrados: idsDoValor(valor), inseridos: [], alterados: [], removidos: [] };
+  for (const [id, c] of depois) {
+    if (!antes.has(id)) destaque.inseridos.push(id);
+    else if (antes.get(id) !== c) destaque.alterados.push(id);
+  }
+  for (const id of antes.keys()) if (!depois.has(id)) destaque.removidos.push(id);
+  return destaque;
 }
 
 export class Jogo {
@@ -202,13 +217,7 @@ export class Jogo {
     this.historicoMissao.push(...execucao.operacoes);
     if (execucao.operacoes.length) this.ultimo = { valor: execucao.valor, ok: execucao.ok, operacoes: execucao.operacoes };
 
-    const depois = mapaAlmas(this.mundo);
-    const destaque: Destaque = { encontrados: idsDoValor(execucao.valor), inseridos: [], alterados: [], removidos: [] };
-    for (const [id, c] of depois) {
-      if (!antes.has(id)) destaque.inseridos.push(id);
-      else if (antes.get(id) !== c) destaque.alterados.push(id);
-    }
-    for (const id of antes.keys()) if (!depois.has(id)) destaque.removidos.push(id);
+    const destaque = calcularDestaque(antes, this.mundo, execucao.valor);
 
     // Executar NUNCA conclui o memorando: o jogador analisa a resposta e decide quando protocolar.
     return { execucao, eventos, destaque };
