@@ -1,9 +1,9 @@
 /**
  * Toda missão: a solução de referência passa e cada erro comum é rejeitado com diagnóstico.
- * Rode com `npx vitest run tests/game/missoes.test.ts --reporter verbose` e defina
- * MOSTRAR_MOTIVOS=1 para ler os diagnósticos gerados.
+ * Para ler os diagnósticos gerados: MOSTRAR_MOTIVOS=caminho/arquivo.txt npx vitest run tests/game/missoes.test.ts
  */
 
+import { appendFileSync } from 'node:fs';
 import { CAPITULOS, type Missao } from '../../src/game/missoes';
 import { criarMundo } from '../../src/game/mundo';
 import { montarContexto } from '../../src/game/validacao';
@@ -46,7 +46,7 @@ for (const capitulo of CAPITULOS) {
         for (const errada of missao.solucoesErradas) {
           it(`rejeita: ${errada.porque}`, () => {
             const r = rodar(missao, capitulo.fase, errada.codigo);
-            if (process.env.MOSTRAR_MOTIVOS) console.log(`[${missao.id}] ${errada.porque}\n   → ${r.motivo}`);
+            if (process.env.MOSTRAR_MOTIVOS) appendFileSync(process.env.MOSTRAR_MOTIVOS, `[${missao.id}] ${errada.porque}\n   → ${r.motivo}\n`);
             expect(r.ok).toBe(false);
             expect(r.motivo).toBeTruthy();
           });

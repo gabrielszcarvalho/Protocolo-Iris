@@ -114,6 +114,8 @@ function completar(docs: unknown[], mundo: Database, colecao: string): Doc[] {
   return docs.filter(ehObjetoSimples).map((d) => ('_id' in d ? porId.get(canonico(d._id)) ?? d : d));
 }
 
+const CAMPOS_IDENTIFICADORES = /^(protocolo|nome|endereco\.(rua|numero|cep))$/;
+
 function achatar(doc: Doc): Map<string, unknown> {
   const m = new Map<string, unknown>();
   for (const [k, v] of Object.entries(doc)) {
@@ -135,34 +137,38 @@ export function explicarGrupo(grupo: Doc[], referencia: Doc[]): string | undefin
   const campos = new Set<string>();
   [...achatadosG, ...achatadosR].forEach((m) => m.forEach((_, k) => campos.add(k)));
 
-  type Traco = { chave: string; frase: string; teste: (m: Map<string, unknown>) => boolean };
+  type Traco = { frase: (verbo: string) => string; teste: (m: Map<string, unknown>) => boolean };
   const tracos = new Map<string, Traco>();
   for (const m of achatadosG) {
     for (const campo of campos) {
       if (!m.has(campo)) {
-        tracos.set(`ausente:${campo}`, { chave: `ausente:${campo}`, frase: `não têm o campo ${campo}`, teste: (x) => !x.has(campo) });
+        tracos.set(`ausente:${campo}`, { frase: (v) => `não ${v} o campo ${campo}`, teste: (x) => !x.has(campo) });
         continue;
       }
-      const v = m.get(campo);
-      const tipo = tipoBson(v);
-      if (tipo === 'string' || tipo === 'bool' || tipo === 'int' || tipo === 'double') {
-        const c = canonico(v);
-        tracos.set(`valor:${campo}:${c}`, { chave: c, frase: `têm ${campo}: ${formatar(v)}`, teste: (x) => x.has(campo) && canonico(x.get(campo)) === c });
+      const valor = m.get(campo);
+      const tipo = tipoBson(valor);
+      // Campos que identificam uma ficha só não explicam nada ("tem protocolo A-2008-0002").
+      // Com poucas fichas no grupo, um texto em comum é coincidência; números (limites de faixa) ainda informam.
+      const numerico = tipo === 'int' || tipo === 'double';
+      if ((numerico || ((tipo === 'string' || tipo === 'bool') && grupo.length >= 3)) && !CAMPOS_IDENTIFICADORES.test(campo)) {
+        const c = canonico(valor);
+        tracos.set(`valor:${campo}:${c}`, { frase: (v) => `${v} ${campo}: ${formatar(valor)}`, teste: (x) => x.has(campo) && canonico(x.get(campo)) === c });
       }
-      tracos.set(`tipo:${campo}:${tipo}`, { chave: tipo, frase: `têm ${campo} gravado como ${tipo}`, teste: (x) => x.has(campo) && tipoBson(x.get(campo)) === tipo });
+      tracos.set(`tipo:${campo}:${tipo}`, { frase: (v) => `${v} ${campo} gravado como ${tipo}`, teste: (x) => x.has(campo) && tipoBson(x.get(campo)) === tipo });
     }
   }
 
-  let melhor: { frase: string; pontos: number } | undefined;
+  let melhor: { traco: Traco; pontos: number } | undefined;
   for (const t of tracos.values()) {
     const fracG = achatadosG.filter(t.teste).length / achatadosG.length;
     const fracR = achatadosR.length ? achatadosR.filter(t.teste).length / achatadosR.length : 0;
     const pontos = fracG - fracR;
-    if (fracG >= 0.6 && pontos >= 0.4 && (!melhor || pontos > melhor.pontos)) melhor = { frase: t.frase, pontos };
+    if (fracG >= 0.6 && pontos >= 0.4 && (!melhor || pontos > melhor.pontos)) melhor = { traco: t, pontos };
   }
   if (!melhor) return undefined;
-  const todos = achatadosG.every((m) => [...tracos.values()].find((t) => t.frase === melhor!.frase)!.teste(m));
-  return `${todos ? (grupo.length === 1 ? 'Ela' : 'Todas') : 'A maioria'} ${melhor.frase}`;
+  const todos = achatadosG.every((m) => melhor!.traco.teste(m));
+  if (!todos) return `A maioria ${melhor.traco.frase('tem')}`;
+  return grupo.length === 1 ? `Ela ${melhor.traco.frase('tem')}` : `Todas ${melhor.traco.frase('têm')}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -254,6 +260,13 @@ export function compararResultado(obtido: unknown, esperado: unknown, opts: Opco
 
   if (obtido.length === 0) {
     return { ok: false, motivo: `Nenhuma ficha voltou; esperava ${fichas(lista.length)}. Confira a grafia dos valores: maiúsculas, acentos e espaços contam.` };
+  }
+
+  if (opts.ordem && obtido.length === lista.length) {
+    return {
+      ok: false,
+      motivo: `Você trouxe ${fichas(obtido.length)}, mas não são as esperadas. Confira o filtro, a direção do sort (1 crescente, −1 decrescente) e o valor do skip.`,
+    };
   }
 
   const partes = [`Você retornou ${fichas(obtido.length)}, esperava ${lista.length}.`];
