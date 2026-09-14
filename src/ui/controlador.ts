@@ -26,11 +26,13 @@ export interface BlocoSaida {
   linhas: LinhaSaida[];
 }
 
-export type Sobreposicao =
+/** Cartões em fila (um por vez). O `id` estável evita remontar o cartão a cada atualização. */
+export type Sobreposicao = { id: number } & (
   | { tipo: 'conclusao'; missao: Missao; estrelas: 1 | 2 | 3; carimbos: number }
   | { tipo: 'capitulo'; capitulo: Capitulo }
   | { tipo: 'credencial'; no: NoCredencial }
-  | { tipo: 'fim' };
+  | { tipo: 'fim' }
+);
 
 export interface Toast {
   id: number;
@@ -227,16 +229,16 @@ export class Controlador {
     for (const ev of eventos) {
       switch (ev.tipo) {
         case 'missao-concluida':
-          this.fila.push({ tipo: 'conclusao', missao: ev.missao, estrelas: ev.estrelas, carimbos: ev.carimbos });
+          this.fila.push({ id: ++this.seq, tipo: 'conclusao', missao: ev.missao, estrelas: ev.estrelas, carimbos: ev.carimbos });
           this.parecer = undefined;
           this.falhasSeguidas = 0;
           som.carimbo();
           break;
         case 'capitulo-aberto':
-          this.fila.push({ tipo: 'capitulo', capitulo: ev.capitulo });
+          this.fila.push({ id: ++this.seq, tipo: 'capitulo', capitulo: ev.capitulo });
           break;
         case 'fim-do-conteudo':
-          this.fila.push({ tipo: 'fim' });
+          this.fila.push({ id: ++this.seq, tipo: 'fim' });
           break;
         case 'credencial-bloqueou':
           this.adicionarToast(`Esse comando exige a credencial “${ev.credencial}”.`, { rotulo: 'Abrir Árvore', painel: 'arvore' });
@@ -273,7 +275,7 @@ export class Controlador {
     const r = this.jogo.comprar(id);
     if (r.ok) {
       som.desbloqueio();
-      this.fila.push({ tipo: 'credencial', no: r.no });
+      this.fila.push({ id: ++this.seq, tipo: 'credencial', no: r.no });
       this.painel = null;
       this.salvar();
     }
