@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useControlador } from '../controlador';
 
 export function Sobreposicoes() {
@@ -24,10 +24,12 @@ export function Sobreposicoes() {
     };
   }, [atual, c]);
 
+  // Sem animação de saída: o cartão some na hora. Saídas animadas acumulavam cartões antigos no DOM
+  // quando a aba ficava em segundo plano (o navegador pausa os quadros de animação).
   return (
-    <AnimatePresence>
+    <>
       {atual && (
-        <motion.div key={atual.id} className="sobreposicao-fundo" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        <motion.div key={atual.id} className="sobreposicao-fundo" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {atual.tipo === 'conclusao' && (
             <motion.div className="cartao papel conclusao" initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }}>
               <p className="cartao-sobre">
@@ -116,6 +118,6 @@ export function Sobreposicoes() {
           )}
         </motion.div>
       )}
-    </AnimatePresence>
+    </>
   );
 }
