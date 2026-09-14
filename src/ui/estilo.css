@@ -1133,13 +1133,67 @@ kbd {
 
 .memorando-objetivos ul {
   margin: 0;
-  padding-left: 1.1rem;
-  list-style: '☐  ';
+  padding: 0;
+  list-style: none;
 }
 
 .memorando-objetivos li {
-  margin: 0.15rem 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.25rem 0;
   font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.caixinha {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 1.15em;
+  height: 1.15em;
+  margin-top: 0.1em;
+  border: 1.5px solid var(--tinta-2);
+  border-radius: 2px;
+  font-size: 0.9em;
+  font-weight: 700;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.memorando-objetivos li.certo .caixinha {
+  border-color: var(--musgo);
+  background: var(--musgo);
+  color: var(--papel);
+}
+
+.memorando-objetivos li.errado .caixinha {
+  border-color: var(--carimbo);
+  color: var(--carimbo);
+}
+
+.memorando-objetivos li.errado > span:last-child {
+  color: var(--carimbo);
+}
+
+.memorando-objetivos.desatualizada li .caixinha,
+.memorando-objetivos.desatualizada li > span:last-child {
+  opacity: 0.55;
+}
+
+.nota-conferencia {
+  margin: 0.3rem 0 0;
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--tinta-2);
+}
+
+.memorando-instrucao {
+  flex-basis: 100%;
+  margin: 0 0 0.2rem;
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--tinta-2);
 }
 
 .memorando-anexo {
@@ -2018,6 +2072,111 @@ kbd {
   border: 0;
   font-size: 1.2rem;
   color: var(--tinta-2);
+}
+
+/* ---------------------------------------------------------------- além: logo, brasas, portais */
+
+.titulo-logo {
+  display: block;
+  margin: 0 auto 0.8rem;
+  color: var(--papel);
+  filter: drop-shadow(0 0 18px rgba(255, 120, 60, 0.35));
+  animation: piscar-olho 7s ease-in-out infinite;
+  transform-origin: center 60%;
+}
+
+@keyframes piscar-olho {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.08); }
+}
+
+.titulo-inferno {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 45vh;
+  background: radial-gradient(ellipse at 50% 120%, rgba(214, 72, 28, 0.55), rgba(120, 30, 12, 0.25) 45%, transparent 75%);
+  animation: tremeluz 3.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.titulo-brasas span {
+  position: absolute;
+  bottom: -10px;
+  border-radius: 50%;
+  background: #ffb35c;
+  box-shadow: 0 0 6px #ff7a2e, 0 0 12px rgba(255, 80, 20, 0.6);
+  opacity: 0;
+  animation: brasa linear infinite;
+}
+
+@keyframes brasa {
+  0% { transform: translate(0, 0); opacity: 0; }
+  10% { opacity: 0.9; }
+  100% { transform: translate(var(--deriva), -70vh); opacity: 0; }
+}
+
+.barra-marca {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.barra-marca > div {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.barra-logo {
+  color: var(--papel);
+}
+
+.portal {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 2px;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.portal small {
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.portal-ceu {
+  margin-bottom: 8px;
+  color: #3a3322;
+  background: linear-gradient(180deg, #f6efd8, #d9ccaa);
+  box-shadow: 0 0 16px rgba(255, 244, 200, 0.35);
+}
+
+.portal-inferno {
+  margin-top: 8px;
+  color: #ffd2b0;
+  background: linear-gradient(0deg, #7a1d0c, #3a130b);
+  box-shadow: 0 0 16px rgba(214, 72, 28, 0.45);
+  animation: caldeira 2.8s ease-in-out infinite;
+}
+
+@keyframes caldeira {
+  50% { box-shadow: 0 0 24px rgba(240, 96, 40, 0.65); }
+}
+
+.tela-jogo {
+  background:
+    radial-gradient(ellipse at 50% 115%, rgba(150, 40, 16, 0.28), transparent 55%),
+    repeating-linear-gradient(92deg, rgba(255, 255, 255, 0.012) 0 3px, transparent 3px 11px),
+    linear-gradient(180deg, var(--madeira-2), var(--madeira));
 }
 
 /* ---------------------------------------------------------------- telas menores */

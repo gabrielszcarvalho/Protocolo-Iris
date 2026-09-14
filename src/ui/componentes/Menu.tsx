@@ -9,7 +9,7 @@ export function Menu() {
   return (
     <div className="dialogo-fundo" onClick={() => c.fecharPainel()}>
       <div className="dialogo papel menu" onClick={(ev) => ev.stopPropagation()} role="dialog" aria-modal aria-label="Menu">
-        <h2>Pausa para o café</h2>
+        <h2>Pausa para o café (frio, como tudo aqui)</h2>
         <p className="menu-estatisticas">
           {e.comandos} comandos executados · {e.erros} erros · {e.carimbosGanhos} carimbos ganhos
         </p>

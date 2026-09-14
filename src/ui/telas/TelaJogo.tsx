@@ -11,6 +11,7 @@ import { Tutorial } from '../componentes/Tutorial';
 import { Sobreposicoes } from '../componentes/Sobreposicoes';
 import { Menu } from '../componentes/Menu';
 import { ARVORE } from '../../game/arvore';
+import { Logo } from '../componentes/Logo';
 
 export function TelaJogo() {
   const c = useControlador();
@@ -42,10 +43,13 @@ export function TelaJogo() {
     <div className="tela-jogo">
       <header className="barra">
         <div className="barra-marca">
-          <strong>Protocolo Íris</strong>
-          <span>
-            Capítulo {capitulo.numero} · {capitulo.titulo}
-          </span>
+          <Logo tamanho={34} className="barra-logo" corDoX="#201a15" />
+          <div>
+            <strong>Protocolo Íris</strong>
+            <span>
+              Purgatório, 3º subsolo · Capítulo {capitulo.numero} · {capitulo.titulo}
+            </span>
+          </div>
         </div>
 
         <div className="barra-carimbos" data-tutorial="carimbos" title="Carimbos: a moeda da repartição">
@@ -82,10 +86,11 @@ export function TelaJogo() {
                 <i />
                 <i />
               </span>
-              <span>iris — terminal do Departamento</span>
+              <span>iris — terminal do Purgatório, 3º subsolo</span>
             </div>
             <Editor
               aoExecutar={(texto) => c.executar(texto)}
+              aoProtocolar={() => c.protocolar()}
               aoMudar={(texto) => c.setTextoEditor(texto)}
               historico={() => c.historico}
               sugestoes={() => c.sugestoes()}
@@ -93,8 +98,8 @@ export function TelaJogo() {
             />
             <div className="terminal-rodape">
               <span className="atalhos">
-                <kbd>Ctrl+Enter</kbd> executa · <kbd>↑</kbd>
-                <kbd>↓</kbd> histórico · <kbd>Ctrl+Espaço</kbd> sugestões · <kbd>Ctrl+L</kbd> limpa
+                <kbd>Ctrl+Enter</kbd> executa · <kbd>Ctrl+Shift+Enter</kbd> protocola · <kbd>↑</kbd>
+                <kbd>↓</kbd> histórico · <kbd>Ctrl+Espaço</kbd> sugestões
               </span>
               <button className="botao-executar" data-tutorial="executar" onClick={() => c.executar()}>
                 Executar ▶

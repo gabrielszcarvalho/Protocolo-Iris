@@ -3,11 +3,11 @@ import { useControlador } from '../controlador';
 import { FASES, SETORES, type Setor } from '../../game/mundo';
 
 const DESCRICAO: Record<Setor, string> = {
-  Limbo: 'Aguardando decisão',
-  Purgatório: 'Em revisão',
-  'Ante-Sala': 'Prestes a partir',
-  'Arquivo Morto': 'Registros legados',
-  Correspondência: 'Recados não entregues',
+  Limbo: 'Mortos aguardando julgamento',
+  Purgatório: 'Cumprindo pena, com senha',
+  'Ante-Sala': 'Fila para a porta do Céu',
+  'Arquivo Morto': 'Fichas que nem os mortos leem',
+  Correspondência: 'Recados que nunca chegaram aos vivos',
 };
 
 export function Mapa() {
@@ -37,6 +37,11 @@ export function Mapa() {
           {docs.length} fichas · fase “{FASES[jogo.progresso.fase - 1].titulo}”
         </span>
       </header>
+
+      <div className="portal portal-ceu">
+        <span>↑ Céu</span>
+        <small>saída exclusiva para fichas deferidas</small>
+      </div>
 
       <div className={`planta ${algumDestaque ? 'com-destaque' : ''}`}>
         {SETORES.map((setor) => {
@@ -90,6 +95,11 @@ export function Mapa() {
             </div>
           </section>
         )}
+      </div>
+
+      <div className="portal portal-inferno">
+        <span>↓ Inferno</span>
+        <small>não perturbe as caldeiras</small>
       </div>
 
       <footer className="mapa-legenda">

@@ -1,12 +1,22 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useControlador } from '../controlador';
+import { Logo } from '../componentes/Logo';
 
-const FICHAS = Array.from({ length: 14 }, (_, i) => ({
+const FICHAS = Array.from({ length: 12 }, (_, i) => ({
   esquerda: (i * 37) % 100,
   atraso: (i * 1.7) % 12,
-  duracao: 14 + ((i * 5) % 9),
+  duracao: 16 + ((i * 5) % 9),
   giro: ((i * 47) % 60) - 30,
+}));
+
+// Brasas subindo do andar de baixo.
+const BRASAS = Array.from({ length: 26 }, (_, i) => ({
+  esquerda: (i * 53) % 100,
+  atraso: (i * 0.9) % 9,
+  duracao: 6 + ((i * 7) % 7),
+  tamanho: 2 + ((i * 3) % 4),
+  deriva: ((i * 29) % 80) - 40,
 }));
 
 export function TelaTitulo() {
@@ -19,6 +29,7 @@ export function TelaTitulo() {
   return (
     <main className="tela-titulo">
       <div className="titulo-luz" aria-hidden />
+      <div className="titulo-inferno" aria-hidden />
       <div className="titulo-fichas" aria-hidden>
         {FICHAS.map((f, i) => (
           <span
@@ -27,13 +38,29 @@ export function TelaTitulo() {
           />
         ))}
       </div>
+      <div className="titulo-brasas" aria-hidden>
+        {BRASAS.map((b, i) => (
+          <span
+            key={i}
+            style={{
+              left: `${b.esquerda}%`,
+              width: b.tamanho,
+              height: b.tamanho,
+              animationDelay: `${-b.atraso}s`,
+              animationDuration: `${b.duracao}s`,
+              ['--deriva' as string]: `${b.deriva}px`,
+            }}
+          />
+        ))}
+      </div>
 
       <motion.header className="titulo-cabecalho" initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9 }}>
-        <p className="titulo-sobre">Departamento de Almas Extraviadas</p>
+        <Logo tamanho={120} className="titulo-logo" corDoX="#1a1511" />
+        <p className="titulo-sobre">Departamento de Almas Extraviadas · Purgatório, 3º subsolo</p>
         <h1>
           Protocolo <em>Íris</em>
         </h1>
-        <p className="titulo-lema">Um jogo sobre MongoDB, burocracia e almas com assuntos pendentes.</p>
+        <p className="titulo-lema">Um jogo sobre MongoDB, burocracia e os mortos que ainda não foram despachados.</p>
       </motion.header>
 
       <motion.nav className="titulo-menu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 0.6 }}>
@@ -53,13 +80,13 @@ export function TelaTitulo() {
         </button>
       </motion.nav>
 
-      <footer className="titulo-rodape">versão 0.2 · capítulos 1 a 3 · feito para a disciplina de Banco de Dados NoSQL</footer>
+      <footer className="titulo-rodape">versão 0.3 · capítulos 1 a 3 · feito para a disciplina de Banco de Dados NoSQL</footer>
 
       {confirmar && (
         <div className="dialogo-fundo" onClick={() => setConfirmar(false)}>
           <div className="dialogo papel" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal>
             <h2>Começar um novo expediente?</h2>
-            <p>O progresso atual (carimbos, credenciais e memorandos) será perdido.</p>
+            <p>O progresso atual (carimbos, credenciais e memorandos) vai para o Arquivo Morto. Não tem ressurreição.</p>
             <div className="dialogo-acoes">
               <button className="botao" onClick={() => setConfirmar(false)} autoFocus>
                 Cancelar
@@ -84,10 +111,11 @@ export function TelaTitulo() {
             <h2>Sobre o Protocolo Íris</h2>
             <p>
               Você escreve comandos reais do MongoDB. Eles rodam num banco de dados simulado dentro do seu navegador — nada é
-              enviado para a internet, e o progresso fica salvo neste computador.
+              enviado para a internet (nem para o além), e o progresso fica salvo neste computador.
             </p>
             <p>
               Cumpra memorandos para ganhar carimbos, troque carimbos por credenciais e desbloqueie comandos novos, um de cada vez.
+              Enquanto as fichas não forem despachadas, ninguém segue para o Céu nem para o Inferno.
             </p>
             <div className="dialogo-acoes">
               <button className="botao" onClick={() => setSobre(false)} autoFocus>

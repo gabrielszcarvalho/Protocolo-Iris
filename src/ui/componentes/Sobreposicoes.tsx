@@ -105,8 +105,8 @@ export function Sobreposicoes() {
               <p className="cartao-sobre">Fim do expediente desta versão</p>
               <h2>O arquivo agradece</h2>
               <p className="capitulo-texto">
-                Você cumpriu todos os memorandos disponíveis. A Diretoria está preparando a Retificação, os Anexos, o Regulamento e os
-                Relatórios. Até lá, o arquivo segue aberto para consultas.
+                Você despachou todos os memorandos disponíveis. A Diretoria está preparando a Retificação, os Anexos, o Regulamento e os
+                Relatórios. Até lá, o arquivo segue aberto para consultas — os mortos têm tempo.
               </p>
               <p className="capitulo-meta">
                 {jogo.progresso.estatisticas.comandos} comandos · {jogo.progresso.estatisticas.carimbosGanhos} carimbos ganhos

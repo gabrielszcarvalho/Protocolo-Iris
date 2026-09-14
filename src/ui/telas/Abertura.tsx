@@ -4,10 +4,22 @@ import { useControlador } from '../controlador';
 import { som } from '../som';
 
 const CARTAS = [
-  { rotulo: 'Diário Oficial do Além · Edital nº 1/1953', texto: 'Parabéns! Sua aprovação no concurso público mais disputado do além acaba de ser publicada.' },
-  { rotulo: 'Cargo', texto: 'Arquivista-Chefe do Departamento de Almas Extraviadas: a repartição que registra quem partiu deixando assuntos pendentes.' },
-  { rotulo: 'Situação do setor', texto: 'Em 1953, o arquivo de papel pegou fogo. O que sobrou foi digitado às pressas num banco de dados MongoDB. Com muitos erros.' },
-  { rotulo: 'Instruções', texto: 'Seu antecessor sumiu sem deixar relatório. Você recebe uma credencial provisória, um terminal e uma fila de almas esperando.' },
+  {
+    rotulo: 'Certidão de óbito · via única',
+    texto: 'Você faleceu numa terça-feira, às 3h17. Nossos pêsames. Por favor, não se levante: a fila é longa.',
+  },
+  {
+    rotulo: 'Diário Oficial do Além · Edital nº 1/1953',
+    texto: 'Boa notícia: sua aprovação no concurso mais disputado do Purgatório saiu. Cargo: Arquivista-Chefe do Departamento de Almas Extraviadas.',
+  },
+  {
+    rotulo: 'Situação do setor',
+    texto: 'Em 1953, uma caldeira do Inferno (é o andar de baixo) explodiu e queimou o arquivo de papel. O que sobrou foi digitado às pressas num banco de dados MongoDB. Com muitos erros.',
+  },
+  {
+    rotulo: 'Instruções',
+    texto: 'Seu antecessor sumiu sem deixar relatório. Enquanto as fichas não forem despachadas, nenhuma alma segue para o Céu nem para o Inferno. Estão todas esperando por você.',
+  },
 ];
 
 const VELOCIDADE = 28; // ms por letra
@@ -91,7 +103,7 @@ export function Abertura() {
               animate={{ scale: 1, opacity: 1, rotate: -12 }}
               transition={{ type: 'spring', stiffness: 380, damping: 18, delay: 0.15 }}
             >
-              Empossado
+              Empossado post mortem
             </motion.div>
           )}
 
