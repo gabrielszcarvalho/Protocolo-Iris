@@ -64,6 +64,15 @@ export class Armazenamento {
     await comLoja('readwrite', this.fabrica, (loja) => loja.delete(chave));
   }
 
+  /** Grava um valor que já é JSON puro (sem conversão EJSON). */
+  async salvarJSON(chave: string, valor: unknown): Promise<void> {
+    await comLoja('readwrite', this.fabrica, (loja) => loja.put(valor, chave));
+  }
+
+  async carregarJSON<T>(chave: string): Promise<T | undefined> {
+    return comLoja<T | undefined>('readonly', this.fabrica, (loja) => loja.get(chave));
+  }
+
   async salvarBanco(chave: string, db: Database): Promise<void> {
     // O snapshot já está em EJSON; gravamos sem converter de novo.
     await comLoja('readwrite', this.fabrica, (loja) => loja.put(db.snapshot(), chave));
