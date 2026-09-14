@@ -19,6 +19,7 @@ import { CursorBase, type Documento } from './cursor';
 import { ErroShell, MongoBulkWriteError, normalizarErro } from './errors';
 import { formatar } from './format';
 import type { Colecao } from './collection';
+import { criarApisDoCluster } from './cluster';
 import type { Database, RegistroOperacao } from './database';
 
 export interface LinhaSaida {
@@ -212,10 +213,20 @@ function montarCorpo(instrucoes: string[], capturarUltima: boolean): string {
 // Fachadas: o jogador só enxerga a API pública
 // ---------------------------------------------------------------------------
 
-function fachadaColecao(col: Colecao): Record<string, unknown> {
+function fachadaColecao(col: Colecao, db: Database): Record<string, unknown> {
   const f: Record<string, unknown> = {};
   for (const m of METODOS_COLECAO) {
-    f[m] = (...args: unknown[]) => (col[m] as (...a: unknown[]) => unknown).apply(col, args);
+    f[m] = (...args: unknown[]) => {
+      const antes = db.historico.length;
+      try {
+        return (col[m] as (...a: unknown[]) => unknown).apply(col, args);
+      } catch (e) {
+        // Marca a operação que falhou, mesmo que o código do jogador capture o erro com try/catch.
+        const registro = db.historico.length > antes ? db.historico[antes] : undefined;
+        if (registro && registro.erro === undefined) registro.erro = normalizarErro(e).codeName ?? (e as Error).name;
+        throw e;
+      }
+    };
   }
   f.getName = () => col.nome;
   f.toString = () => col.ns;
@@ -225,7 +236,7 @@ function fachadaColecao(col: Colecao): Record<string, unknown> {
 function fachadaBanco(db: Database): Record<string, unknown> {
   const base: Record<string, unknown> = {
     getName: () => db.getName(),
-    getCollection: (nome: string) => fachadaColecao(db.getCollection(nome)),
+    getCollection: (nome: string) => fachadaColecao(db.getCollection(nome), db),
     getCollectionNames: () => db.getCollectionNames(),
     getCollectionInfos: (filtro?: Documento) => db.getCollectionInfos(filtro),
     createCollection: (nome: unknown, opcoes?: unknown) => db.createCollection(nome, opcoes),
@@ -239,7 +250,7 @@ function fachadaBanco(db: Database): Record<string, unknown> {
       if (Object.prototype.hasOwnProperty.call(alvo, chave)) return alvo[chave];
       if (chave === 'then' || chave.startsWith('_')) return undefined;
       // qualquer outro nome é uma coleção: db.almas, db.protocolos...
-      return fachadaColecao(db.colecao(chave));
+      return fachadaColecao(db.colecao(chave), db);
     },
     set() {
       throw new TypeError('db é somente leitura: para criar uma coleção, use db.createCollection("nome") ou insira um documento.');
@@ -278,6 +289,9 @@ export class Sessao {
       return { ok: true, saida, valor: valorFinal, operacoes: operacoes() };
     } catch (e) {
       const erro = normalizarErro(e);
+      // Marca a operação que falhou (missões conferem, por exemplo, "uma inserção foi bloqueada").
+      const ultima = this.db.historico.at(-1);
+      if (ultima && this.db.historico.length > inicioHistorico && ultima.erro === undefined) ultima.erro = erro.codeName ?? erro.name;
       saida.push({ tipo: 'erro', texto: this.textoDoErro(erro), traducao: erro.traducao });
       return { ok: false, saida, valor: undefined, erro, operacoes: operacoes() };
     }
@@ -344,8 +358,13 @@ export class Sessao {
     function ObjectIdShell(hex?: string) {
       return new ObjectId(hex);
     }
+    const cluster = criarApisDoCluster(this.db);
     return {
       db: fachadaBanco(this.db),
+      rs: Object.freeze(cluster.rs),
+      sh: Object.freeze(cluster.sh),
+      diretoria: Object.freeze(cluster.diretoria),
+      prova: Object.freeze(cluster.prova),
       ObjectId: ObjectIdShell,
       ISODate,
       NumberInt,

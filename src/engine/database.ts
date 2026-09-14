@@ -7,6 +7,7 @@ import { clonar, deEJSON, ehObjetoSimples, paraEJSON } from './bson';
 import { Colecao, type AcaoValidacao, type NivelValidacao, type OpcoesColecao } from './collection';
 import { erros } from './errors';
 import type { Operacao } from './credenciais';
+import { clusterInicial, type EstadoCluster } from './cluster';
 import { criarQuery } from './mingoCtx';
 import type { Plano } from './explain';
 import type { DefinicaoIndice } from './indexes';
@@ -25,11 +26,14 @@ export interface RegistroOperacao extends Operacao {
   plano?: Plano;
   resultado?: number;
   encadeamento?: { metodo: string; args: unknown[] }[];
+  /** codeName do erro, quando a operação falhou (ex.: DocumentValidationFailure). */
+  erro?: string;
 }
 
 export interface SnapshotBanco {
   versao: 1;
   colecoes: { nome: string; docs: unknown; indices: DefinicaoIndice[]; opcoes: unknown }[];
+  cluster?: EstadoCluster;
 }
 
 const NIVEIS: NivelValidacao[] = ['strict', 'moderate', 'off'];
@@ -40,6 +44,8 @@ export class Database {
   private readonly colecoes = new Map<string, Colecao>();
   readonly log: EntradaLog[] = [];
   readonly historico: RegistroOperacao[] = [];
+  /** Infraestrutura simulada (replica set, sharding, decisões da Diretoria). */
+  cluster: EstadoCluster = clusterInicial();
   /**
    * Gancho do jogo: lança erro (ex.: CredencialError) se a operação não for permitida.
    * Sem verificador, tudo é permitido.
@@ -209,6 +215,7 @@ export class Database {
   clonar(): Database {
     // O verificador NÃO é copiado: clones servem para simulação e soluções de referência.
     const copia = new Database();
+    copia.cluster = clonar(this.cluster);
     for (const [nome, col] of this.colecoes) {
       const nova = new Colecao(nome, copia);
       nova.carregar(col.docs.map(clonar), col.definicoesDeIndice().map(clonar), clonar(col.opcoes));
@@ -226,11 +233,13 @@ export class Database {
         indices: c.definicoesDeIndice(),
         opcoes: paraEJSON(c.opcoes),
       })),
+      cluster: clonar(this.cluster),
     };
   }
 
   static restaurar(snap: SnapshotBanco): Database {
     const db = new Database();
+    if (snap.cluster) db.cluster = { ...clusterInicial(), ...clonar(snap.cluster) };
     for (const c of snap.colecoes) {
       const col = new Colecao(c.nome, db);
       col.carregar(deEJSON(c.docs) as Documento[], c.indices, deEJSON(c.opcoes) as OpcoesColecao);
