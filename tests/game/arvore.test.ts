@@ -21,11 +21,17 @@ describe('Árvore de Credenciamento', () => {
 
   it('situação do nó', () => {
     const possui = new Set([RAIZ]);
-    expect(situacaoDoNo(NO_POR_ID.get(RAIZ)!, possui, 0)).toBe('possui');
-    expect(situacaoDoNo(NO_POR_ID.get('leitura-rapida')!, possui, 0)).toBe('sem-carimbos');
-    expect(situacaoDoNo(NO_POR_ID.get('leitura-rapida')!, possui, 2)).toBe('compravel');
-    expect(situacaoDoNo(NO_POR_ID.get('despacho-em-lote')!, possui, 99)).toBe('bloqueado');
-    expect(situacaoDoNo(NO_POR_ID.get('expurgo')!, possui, 99)).toBe('lacrado');
+    expect(situacaoDoNo(NO_POR_ID.get(RAIZ)!, possui, 0, 1)).toBe('possui');
+    expect(situacaoDoNo(NO_POR_ID.get('leitura-rapida')!, possui, 0, 1)).toBe('sem-carimbos');
+    expect(situacaoDoNo(NO_POR_ID.get('leitura-rapida')!, possui, 2, 1)).toBe('compravel');
+    expect(situacaoDoNo(NO_POR_ID.get('despacho-em-lote')!, possui, 99, 1)).toBe('bloqueado');
+    // credencial de capítulo futuro não pode ser comprada (ninguém gasta carimbo no que ainda não serve)
+    expect(situacaoDoNo(NO_POR_ID.get('retificacao')!, possui, 99, 1)).toBe('lacrado');
+    expect(situacaoDoNo(NO_POR_ID.get('retificacao')!, possui, 99, 4)).toBe('compravel');
+  });
+
+  it('requisitos de um nó são do mesmo capítulo ou de antes', () => {
+    for (const no of ARVORE) for (const r of no.requer) expect(NO_POR_ID.get(r)!.capitulo, `${no.id} requer ${r}`).toBeLessThanOrEqual(no.capitulo);
   });
 
   it('verificador bloqueia com o nome da credencial', () => {

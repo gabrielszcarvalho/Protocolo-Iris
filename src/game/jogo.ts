@@ -64,7 +64,7 @@ export interface ResultadoComando {
   destaque: Destaque;
 }
 
-export type SituacaoMissao = 'concluida' | 'disponivel' | 'falta-credencial' | 'fechada';
+export type SituacaoMissao = 'concluida' | 'disponivel' | 'falta-credencial' | 'aguardando' | 'fechada';
 
 export interface Save {
   versao: 1;
@@ -145,11 +145,17 @@ export class Jogo {
   situacaoMissao(missao: Missao): SituacaoMissao {
     if (this.concluida(missao)) return 'concluida';
     if (this.capituloDe(missao).numero > this.progresso.capitulo) return 'fechada';
+    if (this.aguardandoPor(missao).length) return 'aguardando';
     return this.credenciaisFaltando(missao).length ? 'falta-credencial' : 'disponivel';
   }
 
+  /** Memorandos que ainda precisam ser deferidos antes deste. */
+  aguardandoPor(missao: Missao): Missao[] {
+    return (missao.depoisDe ?? []).map((id) => MISSAO_POR_ID.get(id)!).filter((m) => !this.concluida(m));
+  }
+
   situacaoNo(no: NoCredencial) {
-    return situacaoDoNo(no, this.possui, this.progresso.carimbos);
+    return situacaoDoNo(no, this.possui, this.progresso.carimbos, this.progresso.capitulo);
   }
 
   get conteudoConcluido(): boolean {
@@ -160,7 +166,7 @@ export class Jogo {
 
   selecionarMissao(id: string): void {
     const missao = MISSAO_POR_ID.get(id);
-    if (!missao || this.situacaoMissao(missao) === 'fechada') return;
+    if (!missao || this.situacaoMissao(missao) === 'fechada' || this.situacaoMissao(missao) === 'aguardando') return;
     this.progresso.missaoAtual = id;
     this.inicioMissao = this.mundo.clonar();
     this.historicoMissao = [];
@@ -296,7 +302,7 @@ export class Jogo {
       }
     }
 
-    const proxima = TODAS_AS_MISSOES.find((m) => this.situacaoMissao(m) !== 'concluida' && this.situacaoMissao(m) !== 'fechada');
+    const proxima = TODAS_AS_MISSOES.find((m) => ['disponivel', 'falta-credencial'].includes(this.situacaoMissao(m)));
     if (proxima) this.selecionarMissao(proxima.id);
     else this.progresso.missaoAtual = null;
     return eventos;
@@ -322,7 +328,7 @@ export class Jogo {
       case 'possui':
         return { ok: false, motivo: 'Você já possui esta credencial.' };
       case 'lacrado':
-        return { ok: false, motivo: 'Lacrada pela Diretoria. Chega numa próxima atualização.' };
+        return { ok: false, motivo: no.disponivel ? `Esta credencial abre no Capítulo ${no.capitulo}.` : 'Lacrada pela Diretoria. Chega numa próxima atualização.' };
       case 'bloqueado':
         return { ok: false, motivo: `Requer antes: ${no.requer.filter((r) => !this.possui.has(r)).map((r) => NO_POR_ID.get(r)!.nome).join(', ')}.` };
       case 'sem-carimbos':

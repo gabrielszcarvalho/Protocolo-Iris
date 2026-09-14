@@ -71,7 +71,7 @@ describe('Jogo', () => {
     expect(jogo.comprar('leitura-rapida')).toMatchObject({ ok: false, motivo: 'Faltam 2 carimbo(s).' });
     jogo.progresso.carimbos = 50;
     expect(jogo.comprar('despacho-em-lote')).toMatchObject({ ok: false });
-    expect(jogo.comprar('expurgo')).toMatchObject({ ok: false, motivo: expect.stringMatching(/Lacrada/) });
+    expect(jogo.comprar('expurgo')).toMatchObject({ ok: false, motivo: 'Esta credencial abre no Capítulo 4.' });
     expect(jogo.comprar('leitura-rapida')).toMatchObject({ ok: true });
     expect(jogo.progresso.carimbos).toBe(48);
     expect(jogo.executar("db.almas.findOne({ nome: 'Odorico Paz' })").execucao.ok).toBe(true);
