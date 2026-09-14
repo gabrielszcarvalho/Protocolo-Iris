@@ -1,0 +1,111 @@
+import { Jogo } from '../../src/game/jogo';
+import { CAPITULOS } from '../../src/game/missoes';
+
+function concluirComReferencia(jogo: Jogo) {
+  const missao = jogo.missaoAtual!;
+  for (const no of jogo.credenciaisFaltando(missao)) {
+    jogo.progresso.carimbos += no.custo;
+    expect(jogo.comprar(no.id)).toMatchObject({ ok: true });
+  }
+  return jogo.executar(missao.solucaoReferencia);
+}
+
+describe('Jogo', () => {
+  it('começa com a Credencial Provisória, zero carimbos e o primeiro memorando', () => {
+    const jogo = Jogo.novo();
+    expect(jogo.progresso.carimbos).toBe(0);
+    expect(jogo.missaoAtual!.id).toBe('1.1');
+    // lê direto (countDocuments ainda não foi comprado pelo jogador)
+    expect(jogo.mundo.colecao('almas').docs).toHaveLength(8);
+  });
+
+  it('comando não comprado gera erro diegético e evento', () => {
+    const jogo = Jogo.novo();
+    const r = jogo.executar('db.almas.findOne()');
+    expect(r.execucao.ok).toBe(false);
+    expect(r.eventos).toContainEqual({ tipo: 'credencial-bloqueou', credencial: 'Leitura Rápida' });
+  });
+
+  it('concluir a primeira missão dá carimbos e abre a próxima', () => {
+    const jogo = Jogo.novo();
+    const r = jogo.executar('db.almas.find()');
+    expect(r.validacao).toEqual({ ok: true });
+    expect(r.eventos[0]).toMatchObject({ tipo: 'missao-concluida', estrelas: 3, carimbos: 4 });
+    expect(r.destaque.encontrados).toHaveLength(8);
+    expect(jogo.progresso.carimbos).toBe(4);
+    expect(jogo.missaoAtual!.id).toBe('1.2');
+  });
+
+  it('explorar não conta como tentativa; protocolar errado conta', () => {
+    const jogo = Jogo.novo();
+    jogo.executar("db.almas.find({ setor: 'Limbo' })");
+    expect(jogo.progresso.tentativas['1.1']).toBeUndefined();
+    const { validacao } = jogo.protocolar();
+    expect(validacao.ok).toBe(false);
+    expect(validacao.motivo).toMatch(/esperava 8/);
+    expect(jogo.progresso.tentativas['1.1']).toBe(1);
+  });
+
+  it('dicas reduzem as estrelas', () => {
+    const jogo = Jogo.novo();
+    expect(jogo.revelarDica()).toHaveLength(1);
+    jogo.revelarDica();
+    jogo.revelarDica();
+    expect(jogo.revelarDica()).toHaveLength(3);
+    expect(jogo.executar('db.almas.find()').eventos[0]).toMatchObject({ estrelas: 1, carimbos: 2 });
+  });
+
+  it('compra exige carimbos e requisitos', () => {
+    const jogo = Jogo.novo();
+    expect(jogo.comprar('leitura-rapida')).toMatchObject({ ok: false, motivo: 'Faltam 2 carimbo(s).' });
+    jogo.progresso.carimbos = 50;
+    expect(jogo.comprar('despacho-em-lote')).toMatchObject({ ok: false });
+    expect(jogo.comprar('expurgo')).toMatchObject({ ok: false, motivo: expect.stringMatching(/Lacrada/) });
+    expect(jogo.comprar('leitura-rapida')).toMatchObject({ ok: true });
+    expect(jogo.progresso.carimbos).toBe(48);
+    expect(jogo.executar("db.almas.findOne({ nome: 'Odorico Paz' })").execucao.ok).toBe(true);
+  });
+
+  it('memorando com anexo carrega a variável no terminal e pode ser reiniciado', () => {
+    const jogo = Jogo.novo();
+    for (let i = 0; i < 7; i++) concluirComReferencia(jogo);
+    expect(jogo.missaoAtual!.id).toBe('1.8');
+    const r = jogo.executar('db.almas.insertMany(lote)');
+    expect(r.execucao.ok).toBe(false);
+    expect(r.destaque.inseridos).toHaveLength(1);
+    const total = jogo.mundo.colecao('almas').countDocuments({});
+    jogo.reiniciarMissao();
+    expect(jogo.mundo.colecao('almas').countDocuments({})).toBe(total - 1);
+    expect(jogo.executar('db.almas.insertMany(lote, { ordered: false })').eventos[0]).toMatchObject({ tipo: 'missao-concluida' });
+  });
+
+  it('terminar o capítulo 1 abre o 2 e faz o mundo crescer', () => {
+    const jogo = Jogo.novo();
+    let eventos: ReturnType<Jogo['executar']>['eventos'] = [];
+    for (const _ of CAPITULOS[0].missoes) eventos = concluirComReferencia(jogo).eventos;
+    expect(eventos).toContainEqual({ tipo: 'capitulo-aberto', capitulo: CAPITULOS[1] });
+    expect(jogo.progresso.fase).toBe(2);
+    expect(jogo.mundo.colecao('almas').countDocuments({})).toBeGreaterThan(300);
+    expect(jogo.missaoAtual!.id).toBe('2.1');
+  });
+
+  it('é possível jogar todo o conteúdo até o fim', () => {
+    const jogo = Jogo.novo();
+    let ultimo: ReturnType<Jogo['executar']> | undefined;
+    for (let i = 0; i < 100 && jogo.missaoAtual; i++) {
+      ultimo = concluirComReferencia(jogo);
+      expect(ultimo.validacao, `falhou em ${ultimo.eventos.length ? '' : jogo.missaoAtual?.id}: ${ultimo.validacao?.motivo}`).toEqual({ ok: true });
+    }
+    expect(jogo.conteudoConcluido).toBe(true);
+    expect(ultimo!.eventos).toContainEqual({ tipo: 'fim-do-conteudo' });
+  });
+
+  it('salvar e carregar preserva progresso, mundo e credenciais', () => {
+    const jogo = Jogo.novo();
+    jogo.executar('db.almas.find()');
+    const volta = Jogo.carregar(JSON.parse(JSON.stringify(jogo.serializar())));
+    expect(volta.progresso.carimbos).toBe(4);
+    expect(volta.missaoAtual!.id).toBe('1.2');
+    expect(volta.executar('db.almas.findOne()').execucao.ok).toBe(false);
+  });
+});
