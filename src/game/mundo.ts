@@ -7,7 +7,7 @@
  */
 
 import { Database } from '../engine/database';
-import { ObjectId } from '../engine/bson';
+import { ObjectId, canonico } from '../engine/bson';
 
 export const SETORES = ['Limbo', 'Purgatório', 'Ante-Sala', 'Arquivo Morto', 'Correspondência'] as const;
 export type Setor = (typeof SETORES)[number];
@@ -21,6 +21,8 @@ export interface Fase {
 export const FASES: Fase[] = [
   { numero: 1, titulo: 'O Limbo', setoresAbertos: ['Limbo', 'Purgatório'] },
   { numero: 2, titulo: 'O Porão', setoresAbertos: [...SETORES] },
+  { numero: 3, titulo: 'A Repartição', setoresAbertos: [...SETORES] },
+  { numero: 4, titulo: 'O Regulamento', setoresAbertos: [...SETORES] },
 ];
 
 // ---------------------------------------------------------------------------
@@ -270,6 +272,201 @@ export function gerarFichasDaFase2(quantidade = 292, semente = 0x1a15): Record<s
   return fichas;
 }
 
+/**
+ * Protocolo que aparece exatamente duas vezes, nas duas cópias com ativo: true (assim nenhuma
+ * outra missão de gravação toca nessas fichas antes do Expurgo, no capítulo 4).
+ */
+export const PROTOCOLO_DUPLICADO: string = (() => {
+  const fichas = gerarFichasDaFase2();
+  const porProtocolo = new Map<string, Record<string, unknown>[]>();
+  for (const f of fichas) porProtocolo.set(f.protocolo as string, [...(porProtocolo.get(f.protocolo as string) ?? []), f]);
+  for (const [protocolo, copias] of porProtocolo) {
+    if (copias.length === 2 && copias.every((c) => c.ativo === true)) return protocolo;
+  }
+  throw new Error('O gerador precisa produzir um protocolo duplicado com as duas cópias ativas.');
+})();
+
+// ---------------------------------------------------------------------------
+// Fase 3: a repartição (capítulo 4 em diante)
+// ---------------------------------------------------------------------------
+
+const HABILIDADES = ['caligrafia', 'carimbo', 'paciência', 'latim', 'datilografia', 'exorcismo', 'contabilidade', 'arquivologia'];
+const SELOS = ['Mérito Póstumo', 'Mérito Burocrático', 'Carimbo de Ouro', 'Assiduidade Eterna'];
+const TURNOS = ['manhã', 'tarde', 'noite', 'madrugada'];
+const PESO_CARGO = [
+  ['Arquivista', 14],
+  ['Carimbador', 6],
+  ['Carimbador-Auxiliar', 2],
+  ['Mensageiro', 5],
+  ['Mensageiro Noturno', 2],
+  ['Escrivão', 5],
+  ['Chefe de Setor', 4],
+] as const;
+
+const semAcento = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+function fixo(n: number, nome: string, cargo: string, setor: string, turno: string, creditos: number, habilidades: string[], email: string, ramal: string) {
+  return {
+    _id: new ObjectId(`5f1953a000000000000000${String(n).padStart(2, '0')}`),
+    nome, cargo, setor, turno, creditos,
+    admissao: dataUTC(`19${String(40 + n).padStart(2, '0')}-03-03`),
+    ativo: true, habilidades, selos: [], contato: { email, ramal },
+  };
+}
+
+export function gerarArquivistas(semente = 0x5e10): Record<string, unknown>[] {
+  const rng = new Rng(semente);
+  const lista: Record<string, unknown>[] = [
+    {
+      _id: new ObjectId('5f1953a00000000000000001'), nome: 'Custódia Ramos', cargo: 'Arquivista-Chefe Interina', setor: 'Limbo', turno: 'noite',
+      creditos: 840, admissao: dataUTC('1921-02-02'), ativo: true, habilidades: ['caligrafia', 'paciência'],
+      selos: [{ nome: 'Mérito Póstumo', ano: 1992 }], contato: { email: 'custodia.ramos@iris.gov', ramal: '0042' },
+    },
+    {
+      _id: new ObjectId('5f1953a00000000000000002'), nome: 'Ananias Pacheco', cargo: 'Carimbador', setor: 'Correspondência', turno: 'manhã',
+      creditos: 60, admissao: dataUTC('1960-07-10'), ativo: true, habilidades: ['carimbo'], selos: [],
+      contato: { email: 'ananias.pacheco@iris.com', ramal: '311' },
+    },
+    {
+      _id: new ObjectId('5f1953a00000000000000003'), nome: 'Belarmino Queiroz', cargo: 'Chefe de Setor', setor: 'Purgatório', turno: 'tarde',
+      creditos: 1080, admissao: dataUTC('1938-12-01'), ativo: true, habilidades: ['latim', 'contabilidade'],
+      selos: [{ nome: 'Carimbo de Ouro', ano: 1975 }, { nome: 'Mérito Burocrático', ano: 2001 }], contato: { email: 'belarmino.queiroz@Iris.Gov', ramal: '1200' },
+    },
+    fixo(4, 'Olímpio Caronte', 'Mensageiro', 'Correspondência', 'madrugada', 300, ['latim'], 'mensageiro@iris.gov', '5150'),
+    fixo(5, 'Zacarias Lume', 'Carimbador-Auxiliar', 'Purgatório', 'tarde', 410, ['carimbo'], 'zacarias_lume@iris.gov', '212'),
+    fixo(6, 'Dorotéia Vaz', 'Mensageiro Noturno', 'Limbo', 'noite', 520, ['exorcismo'], 'doroteia.vaz@irisXgov', '8080'),
+    // Chefes com ramais legados (os únicos que mantêm ramal depois do memorando Sigilo).
+    fixo(7, 'Epaminondas Feitosa', 'Chefe de Setor', 'Arquivo Morto', 'manhã', 700, ['arquivologia'], 'epaminondas.feitosa@iris.gov.br', '42'),
+    fixo(8, 'Filomena Brandão', 'Chefe de Setor', 'Ante-Sala', 'noite', 650, ['paciência'], 'filomena.brandao@iris.gov', '00042'),
+    fixo(9, 'Gumercindo Paiva', 'Chefe de Setor', 'Limbo', 'madrugada', 880, ['contabilidade'], 'gumercindo.paiva@Iris.Gov', 'r-311'),
+  ];
+  const usados = new Set(lista.map((a) => a.nome));
+  const dominios = ['@iris.gov', '@iris.gov', '@iris.gov', '@iris.gov', '@Iris.Gov', '@iris.gov.br', '@irisXgov'];
+  while (lista.length < 40) {
+    const primeiro = rng.escolher(PRIMEIROS);
+    const sobrenome = rng.escolher(SOBRENOMES);
+    const nome = `${primeiro} ${sobrenome}`;
+    if (usados.has(nome)) continue;
+    usados.add(nome);
+    const i = lista.length;
+    const usuario = semAcento(`${primeiro}.${sobrenome.replace(/\s+/g, '')}`).toLowerCase();
+    const turno = rng.escolher(TURNOS);
+    const habilidades = rng.amostra(HABILIDADES, rng.inteiro(1, 3));
+    lista.push({
+      _id: rng.objectId(),
+      nome,
+      cargo: rng.ponderado(PESO_CARGO),
+      setor: rng.ponderado(PESO_SETOR),
+      turno,
+      creditos: rng.inteiro(100, 990),
+      admissao: dataEntre(rng, 1900, 2020),
+      ativo: rng.chance(0.85),
+      habilidades,
+      selos: rng.amostra(SELOS, rng.inteiro(0, 2)).map((s) => ({ nome: s, ano: rng.inteiro(1950, 2020) })),
+      contato: {
+        email: `${usuario}${dominios[i % dominios.length]}`,
+        ramal: i % 5 === 0 ? String(rng.inteiro(100, 999)) : String(rng.inteiro(1000, 9999)),
+      },
+    });
+  }
+  return lista;
+}
+
+export function gerarRascunhos(): Record<string, unknown>[] {
+  return Array.from({ length: 30 }, (_, i) => ({ titulo: `Rascunho ${i + 1}`, texto: 'Ilegível. Parece ter sido escrito durante o incêndio.' }));
+}
+
+/** Fichas digitadas com erro de grafia (conteúdo do capítulo 6) e casos de arrays do capítulo 5. */
+export function fichasEspeciaisDaFase3(): Record<string, unknown>[] {
+  const base = (i: number, protocolo: string, nome: string): Record<string, unknown> => ({
+    _id: new ObjectId(`5f1953b000000000000000${String(i).padStart(2, '0')}`),
+    protocolo,
+    nome,
+    setor: 'Arquivo Morto',
+    pendencia: 'Segredo de família',
+    anos_pendentes: 20 + i,
+    falecimento: dataUTC(`19${String(30 + i).padStart(2, '0')}-05-05`),
+    endereco: { rua: 'Rua da Saudade', numero: String(i), bairro: 'Centro', cep: '66010-000', uf: 'PA' },
+    vinculos: ['vizinha'],
+    audiencias: [{ parecer: 'B', peso: 10 + i, data: dataUTC('1999-01-01') }],
+    ativo: true,
+  });
+  const grafia: [string, string][] = [
+    ['a-1932-0007', 'BENEDITA DAS NEVES'],
+    ['A1932-0017', 'josé do carmo'],
+    ['A-32-0027', 'Maria de Souza'],
+    ['A-1932-7', 'Cândido dos Santos'],
+    [' A-1932-0037', 'Deolindo Valente'],
+    ['A-1932-0047 ', 'Valdemar Siqueira'],
+    ['XA-1932-0057', 'Otília Rangel'],
+    ['A-1932-0067-B', 'Bráulio da Silva'],
+    ['C-1950-0001', 'Cacilda Moura'],
+    ['1950-0002', 'Lindolfo Xavier'],
+    ['A-1919-00037', 'Ermelinda Toledo'],
+    ['A–1920-0001', 'Salete Cordeiro'],
+  ];
+  const fichas = grafia.map(([protocolo, nome], i) => base(i + 1, protocolo, nome));
+  // Almas com DUAS audiências de parecer Z e peso acima de 45 (o posicional $ só pega a primeira).
+  fichas.push(
+    {
+      ...base(20, 'A-1945-0020', 'Custódio Albuquerque'),
+      setor: 'Purgatório',
+      audiencias: [
+        { parecer: 'Z', peso: 48, data: dataUTC('1950-01-01') },
+        { parecer: 'A', peso: 3, data: dataUTC('1960-01-01') },
+        { parecer: 'Z', peso: 50, data: dataUTC('1970-01-01') },
+      ],
+    },
+    {
+      ...base(21, 'A-1946-0021', 'Honorata Bittencourt'),
+      setor: 'Limbo',
+      audiencias: [
+        { parecer: 'Z', peso: 46, data: dataUTC('1951-01-01') },
+        { parecer: 'Z', peso: 30, data: dataUTC('1961-01-01') },
+        { parecer: 'Z', peso: 49, data: dataUTC('1971-01-01') },
+      ],
+    },
+  );
+  return fichas;
+}
+
+// ---------------------------------------------------------------------------
+// Fase 4: o regulamento (capítulo 7 em diante)
+// ---------------------------------------------------------------------------
+
+export const NORMA_REQUERIMENTOS = {
+  $jsonSchema: {
+    bsonType: 'object',
+    required: ['codigo', 'requerente', 'situacao', 'valor'],
+    properties: {
+      codigo: { bsonType: 'string', pattern: '^RQ-\\d{4}$' },
+      requerente: { bsonType: 'string', minLength: 3 },
+      situacao: { enum: ['aberto', 'deferido', 'indeferido'] },
+      valor: { bsonType: ['int', 'double'], minimum: 0 },
+    },
+  },
+};
+
+export function gerarRequerimentos(semente = 0x7e9): Record<string, unknown>[] {
+  const rng = new Rng(semente);
+  return Array.from({ length: 40 }, (_, i) => {
+    const n = i + 1;
+    const doc: Record<string, unknown> = {
+      _id: new ObjectId(`5f1953c0000000000000${String(n).padStart(4, '0')}`),
+      codigo: `RQ-${String(n).padStart(4, '0')}`,
+      requerente: `${rng.escolher(PRIMEIROS)} ${rng.escolher(SOBRENOMES)}`,
+      situacao: rng.escolher(['aberto', 'deferido', 'indeferido']),
+      valor: rng.inteiro(10, 5000),
+      criadoEm: dataEntre(rng, 1953, 2020),
+    };
+    // Legado: valor como texto, situação em caixa alta, requerente esquecido.
+    if ([3, 7, 12, 19, 25].includes(n)) doc.valor = String(doc.valor);
+    if ([5, 14, 22, 33].includes(n)) doc.situacao = 'ABERTO';
+    if ([9, 28, 36].includes(n)) delete doc.requerente;
+    return doc;
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Montagem
 // ---------------------------------------------------------------------------
@@ -277,20 +474,28 @@ export function gerarFichasDaFase2(quantidade = 292, semente = 0x1a15): Record<s
 export function criarMundo(fase = 1): Database {
   const db = new Database();
   db.colecao('almas').insertMany(fichasDaFase1());
-  if (fase >= 2) aplicarFase(db, 2);
+  for (let f = 2; f <= fase; f++) aplicarFase(db, f);
   db.historico.length = 0;
   db.log.length = 0;
   return db;
 }
 
-/** Aplica o crescimento do mundo ao entrar numa fase (idempotente). */
+/** Aplica o crescimento do mundo ao entrar numa fase (idempotente e cumulativo). */
 export function aplicarFase(db: Database, fase: number): void {
   const verificador = db.verificador;
   db.verificador = undefined; // crescimento do mundo não passa pela credencial do jogador
   try {
     const almas = db.colecao('almas');
-    const primeira = gerarFichasDaFase2(1)[0];
-    if (fase >= 2 && !almas.findOne({ _id: primeira._id })) almas.insertMany(gerarFichasDaFase2());
+    // A fase 2 conta como aplicada se QUALQUER ficha do porão ainda existir (o jogador pode ter apagado algumas).
+    const doPorao = gerarFichasDaFase2();
+    const idsDoPorao = new Set(doPorao.map((f) => canonico(f._id)));
+    if (fase >= 2 && !almas.docs.some((d) => idsDoPorao.has(canonico(d._id)))) almas.insertMany(doPorao);
+    if (fase >= 3 && !db.existe('arquivistas')) {
+      db.colecao('arquivistas').insertMany(gerarArquivistas());
+      db.colecao('rascunhos').insertMany(gerarRascunhos());
+      almas.insertMany(fichasEspeciaisDaFase3());
+    }
+    if (fase >= 4 && !db.existe('requerimentos')) db.colecao('requerimentos').insertMany(gerarRequerimentos());
   } finally {
     db.verificador = verificador;
     db.historico.length = 0;
