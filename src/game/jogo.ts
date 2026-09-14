@@ -60,7 +60,6 @@ export interface Destaque {
 
 export interface ResultadoComando {
   execucao: ResultadoExecucao;
-  validacao?: ResultadoValidacao;
   eventos: Evento[];
   destaque: Destaque;
 }
@@ -205,31 +204,54 @@ export class Jogo {
     }
     for (const id of antes.keys()) if (!depois.has(id)) destaque.removidos.push(id);
 
-    let validacao: ResultadoValidacao | undefined;
-    const missao = this.missaoAtual;
-    if (missao && execucao.operacoes.length && this.situacaoMissao(missao) === 'disponivel') {
-      validacao = this.validar(missao);
-      if (validacao.ok) eventos.push(...this.concluir(missao));
-    }
-    return { execucao, validacao, eventos, destaque };
+    // Executar NUNCA conclui o memorando: o jogador analisa a resposta e decide quando protocolar.
+    return { execucao, eventos, destaque };
   }
 
-  /** O jogador pede conferência explícita: falha conta como tentativa e sempre traz diagnóstico. */
-  protocolar(): { validacao: ResultadoValidacao; eventos: Evento[] } {
+  /**
+   * O jogador envia a última resposta para a Diretoria. Recusa conta como tentativa e sempre
+   * traz diagnóstico e a conferência item a item (os quadradinhos de "A entregar").
+   */
+  protocolar(): { validacao: ResultadoValidacao; eventos: Evento[]; objetivos: boolean[] } {
     const missao = this.missaoAtual;
-    if (!missao) return { validacao: { ok: false, motivo: 'Nenhum memorando aberto.' }, eventos: [] };
+    if (!missao) return { validacao: { ok: false, motivo: 'Nenhum memorando aberto.' }, eventos: [], objetivos: [] };
     const faltando = this.credenciaisFaltando(missao);
     if (faltando.length) {
-      return { validacao: { ok: false, motivo: `Este memorando exige a credencial ${faltando.map((n) => `“${n.nome}”`).join(' e ')}.` }, eventos: [] };
+      return {
+        validacao: { ok: false, motivo: `Este memorando exige a credencial ${faltando.map((n) => `“${n.nome}”`).join(' e ')}.` },
+        eventos: [],
+        objetivos: [],
+      };
     }
+    const objetivos = this.conferirObjetivos(missao);
     const validacao = this.validar(missao);
-    if (validacao.ok) return { validacao, eventos: this.concluir(missao) };
+    if (validacao.ok) return { validacao, eventos: this.concluir(missao), objetivos: objetivos.map(() => true) };
     this.progresso.tentativas[missao.id] = (this.progresso.tentativas[missao.id] ?? 0) + 1;
-    return { validacao, eventos: [] };
+    return { validacao, eventos: [], objetivos };
+  }
+
+  /** Confere cada objetivo do memorando contra a última resposta / o estado do arquivo. */
+  conferirObjetivos(missao: Missao): boolean[] {
+    const ctx = this.contexto(missao);
+    return missao.objetivos.map((o) => {
+      try {
+        return o.conferir(ctx);
+      } catch {
+        return false;
+      }
+    });
   }
 
   private validar(missao: Missao): ResultadoValidacao {
-    const ctx = montarContexto({
+    try {
+      return missao.validar(this.contexto(missao));
+    } catch (e) {
+      return { ok: false, motivo: `Não foi possível conferir: ${(e as Error).message}` };
+    }
+  }
+
+  private contexto(missao: Missao) {
+    return montarContexto({
       tipo: missao.tipo,
       codigoReferencia: missao.solucaoReferencia,
       anexo: missao.anexo?.codigo,
@@ -240,11 +262,6 @@ export class Jogo {
       mundoInicio: this.inicioMissao,
       mundo: this.mundo,
     });
-    try {
-      return missao.validar(ctx);
-    } catch (e) {
-      return { ok: false, motivo: `Não foi possível conferir: ${(e as Error).message}` };
-    }
   }
 
   estrelasPara(missao: Missao): 1 | 2 | 3 {

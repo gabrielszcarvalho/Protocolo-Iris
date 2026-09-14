@@ -40,6 +40,14 @@ export interface Toast {
   acao?: { rotulo: string; painel: Painel };
 }
 
+/** Resultado do último protocolo: marcas dos quadradinhos de "A entregar". */
+export interface Conferencia {
+  missaoId: string;
+  marcas: boolean[];
+  /** O jogador rodou comandos depois do protocolo: as marcas se referem à resposta anterior. */
+  desatualizada: boolean;
+}
+
 const CHAVE_SAVE = 'save-v1';
 const CHAVE_EXTRA = 'interface-v1';
 const SEM_DESTAQUE: Destaque = { encontrados: [], inseridos: [], alterados: [], removidos: [] };
@@ -52,7 +60,6 @@ export class Controlador {
   private readonly armazenamento = typeof indexedDB !== 'undefined' ? new Armazenamento() : undefined;
   private timerSalvar?: ReturnType<typeof setTimeout>;
   private seq = 0;
-  private falhasSeguidas = 0;
   private cacheCampos?: { total: number; campos: string[] };
 
   jogo?: Jogo;
@@ -67,7 +74,10 @@ export class Controlador {
   aviso: AvisoContextual | null = null;
   textoEditor = '';
   historico: string[] = [];
-  parecer?: ResultadoValidacao & { protocolado: boolean };
+  /** Parecer do último protocolo recusado. */
+  parecer?: ResultadoValidacao;
+  conferencia?: Conferencia;
+  ultimaExecucaoOk = false;
   aba: AbaSaida = 'resultado';
   somLigado = true;
   pedidoEditor?: { id: number; texto: string };
@@ -98,6 +108,12 @@ export class Controlador {
     }, 300);
   }
 
+  private limparMemorando() {
+    this.parecer = undefined;
+    this.conferencia = undefined;
+    this.destaque = SEM_DESTAQUE;
+  }
+
   // --- telas ------------------------------------------------------------------
 
   async iniciar() {
@@ -125,9 +141,8 @@ export class Controlador {
     this.temSave = true;
     this.blocos = [];
     this.historico = [];
-    this.destaque = SEM_DESTAQUE;
     this.fila = [];
-    this.parecer = undefined;
+    this.limparMemorando();
     this.tela = 'abertura';
     this.salvar();
     this.mudou();
@@ -183,6 +198,7 @@ export class Controlador {
     this.mudou();
   }
 
+  /** Executa um comando. Nunca envia nada à Diretoria: isso é trabalho do protocolar. */
   executar(codigo?: string) {
     const jogo = this.jogo;
     const texto = (codigo ?? this.textoEditor).trim();
@@ -193,15 +209,9 @@ export class Controlador {
     this.historico = [...this.historico.filter((h) => h !== texto), texto].slice(-100);
     this.destaque = r.destaque;
     this.aba = 'resultado';
+    this.ultimaExecucaoOk = r.execucao.ok && r.execucao.operacoes.length > 0;
+    if (this.conferencia && r.execucao.operacoes.length) this.conferencia.desatualizada = true;
 
-    if (r.validacao && !r.validacao.ok) {
-      this.parecer = { ...r.validacao, protocolado: false };
-      this.falhasSeguidas++;
-      if (this.falhasSeguidas >= 3) this.mostrarAviso('parecer');
-    } else if (r.validacao?.ok) {
-      this.parecer = undefined;
-      this.falhasSeguidas = 0;
-    }
     if (!r.execucao.ok) {
       som.erro();
       this.mostrarAviso('primeiro-erro');
@@ -212,15 +222,22 @@ export class Controlador {
     this.mudou();
   }
 
+  /** Envia a última resposta para conferência. */
   protocolar() {
-    if (!this.jogo) return;
-    const { validacao, eventos } = this.jogo.protocolar();
-    if (validacao.ok) this.parecer = undefined;
-    else {
-      this.parecer = { ...validacao, protocolado: true };
+    const jogo = this.jogo;
+    const missao = jogo?.missaoAtual;
+    if (!jogo || !missao) return;
+    const { validacao, eventos, objetivos } = jogo.protocolar();
+    if (validacao.ok) {
+      this.limparMemorando();
+    } else {
+      this.parecer = validacao;
+      this.conferencia = objetivos.length ? { missaoId: missao.id, marcas: objetivos, desatualizada: false } : undefined;
       som.indeferido();
+      this.mostrarAviso('indeferido');
     }
     this.processarEventos(eventos);
+    this.checarTutorial();
     this.salvar();
     this.mudou();
   }
@@ -230,8 +247,6 @@ export class Controlador {
       switch (ev.tipo) {
         case 'missao-concluida':
           this.fila.push({ id: ++this.seq, tipo: 'conclusao', missao: ev.missao, estrelas: ev.estrelas, carimbos: ev.carimbos });
-          this.parecer = undefined;
-          this.falhasSeguidas = 0;
           som.carimbo();
           break;
         case 'capitulo-aberto':
@@ -252,7 +267,7 @@ export class Controlador {
   abrirPainel(painel: Painel, credencial?: string) {
     this.painel = painel;
     this.credencialEmFoco = credencial;
-    if (painel && this.aviso?.alvo === 'botao-arvore' && painel === 'arvore') this.aviso = null;
+    if (painel === 'arvore' && this.aviso?.alvo === 'botao-arvore') this.aviso = null;
     som.clique();
     this.mudou();
   }
@@ -286,9 +301,7 @@ export class Controlador {
   selecionarMissao(id: string) {
     if (!this.jogo) return;
     this.jogo.selecionarMissao(id);
-    this.parecer = undefined;
-    this.falhasSeguidas = 0;
-    this.destaque = SEM_DESTAQUE;
+    this.limparMemorando();
     som.clique();
     this.salvar();
     this.mudou();
@@ -299,8 +312,7 @@ export class Controlador {
     if (!this.jogo) return;
     this.jogo.reiniciarMissao();
     this.blocos = [...this.blocos, { id: ++this.seq, comando: '(reiniciar memorando)', linhas: [{ tipo: 'info', texto: 'O arquivo voltou ao estado em que o memorando chegou.' }] }];
-    this.destaque = SEM_DESTAQUE;
-    this.parecer = undefined;
+    this.limparMemorando();
     this.salvar();
     this.mudou();
   }

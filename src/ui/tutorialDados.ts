@@ -21,19 +21,19 @@ export interface PassoTutorial {
 export const PASSOS_TUTORIAL: PassoTutorial[] = [
   {
     alvo: null,
-    titulo: 'Bem-vindo ao seu posto',
-    texto: 'Esta é a sua mesa de trabalho no Departamento. Em um minuto eu mostro onde fica cada coisa.',
+    titulo: 'Bem-vindo ao Purgatório',
+    texto: 'Esta é a sua mesa no 3º subsolo. Os mortos lá em cima esperam seus despachos. Em um minuto eu mostro onde fica cada coisa.',
     botao: 'Vamos lá',
   },
   {
     alvo: 'memorando',
     titulo: 'Memorandos',
-    texto: 'Aqui chegam os MEMORANDOS da Diretoria. Cada um é uma tarefa. Este primeiro pede para você listar todas as fichas do arquivo.',
+    texto: 'Aqui chegam os MEMORANDOS da Diretoria. Cada um é uma tarefa. Este primeiro pede para você listar todas as fichas que sobraram do incêndio.',
   },
   {
     alvo: 'mapa',
-    titulo: 'O Departamento',
-    texto: 'Este é o MAPA. Cada quadradinho é uma ficha de alma. Por enquanto só o Limbo e o Purgatório estão abertos; o resto do prédio está interditado.',
+    titulo: 'A planta do Departamento',
+    texto: 'Cada quadradinho é a ficha de uma alma. Por enquanto só o Limbo e o Purgatório estão abertos. Lá em cima fica a porta do Céu; lá embaixo, a do Inferno.',
   },
   {
     alvo: 'editor',
@@ -46,19 +46,26 @@ export const PASSOS_TUTORIAL: PassoTutorial[] = [
   {
     alvo: 'executar',
     titulo: 'Executar',
-    texto: 'Agora aperte EXECUTAR (ou Ctrl+Enter no teclado). O comando roda de verdade no banco do Departamento.',
-    espera: (c) => !!c.jogo && '1.1' in c.jogo.progresso.concluidas,
+    texto: 'Agora aperte EXECUTAR (ou Ctrl+Enter). O comando roda de verdade no banco do Departamento — e não envia nada para a Diretoria ainda.',
+    espera: (c) => c.ultimaExecucaoOk,
     aguardando: 'Execute o comando…',
   },
   {
     alvo: 'saida',
-    titulo: 'A resposta',
-    texto: 'A resposta do servidor aparece aqui, exatamente como o MongoDB mostraria. Quando algo dá errado, o erro real vem em vermelho e a tradução logo abaixo.',
+    titulo: 'Analise a resposta',
+    texto: 'A resposta do servidor aparece aqui, exatamente como o MongoDB mostraria. Antes de enviar, confira: voltou mesmo o que o memorando pediu? Quando algo dá errado, o erro vem em vermelho e a tradução logo abaixo.',
+  },
+  {
+    alvo: 'protocolar',
+    titulo: 'Protocolar',
+    texto: 'Conferiu? Clique em PROTOCOLAR RESPOSTA (ou Ctrl+Shift+Enter) para enviar a última resposta à Diretoria. Se estiver errada, ela volta indeferida — e cada recusa custa estrelas.',
+    espera: (c) => !!c.jogo && '1.1' in c.jogo.progresso.concluidas,
+    aguardando: 'Protocole a resposta…',
   },
   {
     alvo: 'carimbos',
     titulo: 'Carimbos',
-    texto: 'Cada memorando cumprido rende CARIMBOS, a moeda da repartição. Quanto menos dicas e tentativas, mais carimbos.',
+    texto: 'Cada memorando deferido rende CARIMBOS, a moeda da repartição. Quanto menos dicas e recusas, mais carimbos.',
   },
   {
     alvo: 'botao-arvore',
@@ -73,7 +80,7 @@ export const PASSOS_TUTORIAL: PassoTutorial[] = [
   {
     alvo: 'botao-manual',
     titulo: 'Manual',
-    texto: 'Esqueceu como um comando funciona? O MANUAL (Ctrl+K) explica tudo o que você já desbloqueou, com exemplos. Bom expediente!',
+    texto: 'Esqueceu como um comando funciona? O MANUAL (Ctrl+K) explica tudo o que você já desbloqueou, com exemplos. Bom expediente — a eternidade é longa.',
     botao: 'Assumir o posto',
   },
 ];
@@ -93,8 +100,8 @@ export const AVISOS: Record<string, Omit<AvisoContextual, 'chave'>> = {
   },
   'primeiro-erro': {
     alvo: 'saida',
-    titulo: 'Erro não quebra nada',
-    texto: 'A linha vermelha é o erro real do MongoDB — vale aprender a ler. A linha amarela logo abaixo traduz o que aconteceu.',
+    titulo: 'Erro não mata ninguém',
+    texto: 'Aqui todo mundo já morreu mesmo. A linha vermelha é o erro real do MongoDB — vale aprender a ler. A linha amarela logo abaixo traduz o que aconteceu.',
   },
   anexo: {
     alvo: 'anexo',
@@ -106,9 +113,9 @@ export const AVISOS: Record<string, Omit<AvisoContextual, 'chave'>> = {
     titulo: 'O arquivo cresceu',
     texto: 'Agora são centenas de fichas em cinco setores. Ler tudo virou impossível — é hora de filtrar.',
   },
-  parecer: {
-    alvo: 'protocolar',
-    titulo: 'Quer um parecer?',
-    texto: 'Se a resposta não confere e você não sabe por quê, clique em PROTOCOLAR: a Diretoria explica o que está errado. Cada protocolo recusado reduz os carimbos.',
+  indeferido: {
+    alvo: 'objetivos',
+    titulo: 'Protocolo indeferido',
+    texto: 'Os quadradinhos de A ENTREGAR mostram o que já estava certo (✓) e o que falta (✗). Ajuste a consulta, rode de novo, confira e protocole outra vez. Se travar, peça uma dica.',
   },
 };

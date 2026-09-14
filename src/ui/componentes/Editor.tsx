@@ -25,6 +25,7 @@ export interface Sugestoes {
 
 interface Props {
   aoExecutar: (texto: string) => void;
+  aoProtocolar: () => void;
   aoMudar: (texto: string) => void;
   historico: () => string[];
   sugestoes: () => Sugestoes;
@@ -93,11 +94,11 @@ function fonteDeSugestoes(obter: () => Sugestoes) {
   };
 }
 
-export function Editor({ aoExecutar, aoMudar, historico, sugestoes, pedido }: Props) {
+export function Editor({ aoExecutar, aoProtocolar, aoMudar, historico, sugestoes, pedido }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
-  const cb = useRef({ aoExecutar, aoMudar, historico, sugestoes });
-  cb.current = { aoExecutar, aoMudar, historico, sugestoes };
+  const cb = useRef({ aoExecutar, aoProtocolar, aoMudar, historico, sugestoes });
+  cb.current = { aoExecutar, aoProtocolar, aoMudar, historico, sugestoes };
   const posHistorico = useRef(-1);
 
   useEffect(() => {
@@ -106,6 +107,13 @@ export function Editor({ aoExecutar, aoMudar, historico, sugestoes, pedido }: Pr
 
     const teclas = Prec.highest(
       keymap.of([
+        {
+          key: 'Mod-Shift-Enter',
+          run: () => {
+            cb.current.aoProtocolar();
+            return true;
+          },
+        },
         {
           key: 'Mod-Enter',
           run: (v) => {

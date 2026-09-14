@@ -2,13 +2,15 @@ import { Jogo } from '../../src/game/jogo';
 import { CAPITULOS } from '../../src/game/missoes';
 import { NO_POR_ID } from '../../src/game/arvore';
 
+/** Compra o que falta, roda a solução de referência e protocola. */
 function concluirComReferencia(jogo: Jogo) {
   const missao = jogo.missaoAtual!;
   for (const no of jogo.credenciaisFaltando(missao)) {
     jogo.progresso.carimbos += no.custo;
     expect(jogo.comprar(no.id)).toMatchObject({ ok: true });
   }
-  return jogo.executar(missao.solucaoReferencia);
+  jogo.executar(missao.solucaoReferencia);
+  return jogo.protocolar();
 }
 
 describe('Jogo', () => {
@@ -27,24 +29,31 @@ describe('Jogo', () => {
     expect(r.eventos).toContainEqual({ tipo: 'credencial-bloqueou', credencial: 'Leitura Rápida' });
   });
 
-  it('concluir a primeira missão dá carimbos e abre a próxima', () => {
+  it('executar a resposta certa NÃO conclui sozinho: é preciso protocolar', () => {
     const jogo = Jogo.novo();
     const r = jogo.executar('db.almas.find()');
-    expect(r.validacao).toEqual({ ok: true });
-    expect(r.eventos[0]).toMatchObject({ tipo: 'missao-concluida', estrelas: 3, carimbos: 4 });
+    expect(r.eventos).toEqual([]);
     expect(r.destaque.encontrados).toHaveLength(8);
+    expect(jogo.missaoAtual!.id).toBe('1.1');
+
+    const p = jogo.protocolar();
+    expect(p.validacao).toEqual({ ok: true });
+    expect(p.objetivos).toEqual([true]);
+    expect(p.eventos[0]).toMatchObject({ tipo: 'missao-concluida', estrelas: 3, carimbos: 4 });
     expect(jogo.progresso.carimbos).toBe(4);
     expect(jogo.missaoAtual!.id).toBe('1.2');
   });
 
-  it('explorar não conta como tentativa; protocolar errado conta', () => {
+  it('protocolar errado conta tentativa e marca os quadradinhos que já estão certos', () => {
     const jogo = Jogo.novo();
-    jogo.executar("db.almas.find({ setor: 'Limbo' })");
-    expect(jogo.progresso.tentativas['1.1']).toBeUndefined();
-    const { validacao } = jogo.protocolar();
+    jogo.executar('db.almas.find()');
+    jogo.protocolar(); // 1.1
+    jogo.executar('db.almas.find({}, { nome: 1, setor: 1 })');
+    expect(jogo.progresso.tentativas['1.2']).toBeUndefined();
+    const { validacao, objetivos } = jogo.protocolar();
     expect(validacao.ok).toBe(false);
-    expect(validacao.motivo).toMatch(/esperava 8/);
-    expect(jogo.progresso.tentativas['1.1']).toBe(1);
+    expect(objetivos).toEqual([true, true, false]); // todas as almas ✓, nome e setor ✓, sem _id ✗
+    expect(jogo.progresso.tentativas['1.2']).toBe(1);
   });
 
   it('dicas reduzem as estrelas', () => {
@@ -53,7 +62,8 @@ describe('Jogo', () => {
     jogo.revelarDica();
     jogo.revelarDica();
     expect(jogo.revelarDica()).toHaveLength(3);
-    expect(jogo.executar('db.almas.find()').eventos[0]).toMatchObject({ estrelas: 1, carimbos: 2 });
+    jogo.executar('db.almas.find()');
+    expect(jogo.protocolar().eventos[0]).toMatchObject({ estrelas: 1, carimbos: 2 });
   });
 
   it('compra exige carimbos e requisitos', () => {
@@ -74,28 +84,30 @@ describe('Jogo', () => {
     const r = jogo.executar('db.almas.insertMany(lote)');
     expect(r.execucao.ok).toBe(false);
     expect(r.destaque.inseridos).toHaveLength(1);
-    const total = jogo.mundo.colecao('almas').countDocuments({});
+    const total = jogo.mundo.colecao('almas').docs.length;
     jogo.reiniciarMissao();
-    expect(jogo.mundo.colecao('almas').countDocuments({})).toBe(total - 1);
-    expect(jogo.executar('db.almas.insertMany(lote, { ordered: false })').eventos[0]).toMatchObject({ tipo: 'missao-concluida' });
+    expect(jogo.mundo.colecao('almas').docs).toHaveLength(total - 1);
+    jogo.executar('db.almas.insertMany(lote, { ordered: false })');
+    expect(jogo.protocolar().eventos[0]).toMatchObject({ tipo: 'missao-concluida' });
   });
 
   it('terminar o capítulo 1 abre o 2 e faz o mundo crescer', () => {
     const jogo = Jogo.novo();
-    let eventos: ReturnType<Jogo['executar']>['eventos'] = [];
+    let eventos: ReturnType<Jogo['protocolar']>['eventos'] = [];
     for (const _ of CAPITULOS[0].missoes) eventos = concluirComReferencia(jogo).eventos;
     expect(eventos).toContainEqual({ tipo: 'capitulo-aberto', capitulo: CAPITULOS[1] });
     expect(jogo.progresso.fase).toBe(2);
-    expect(jogo.mundo.colecao('almas').countDocuments({})).toBeGreaterThan(300);
+    expect(jogo.mundo.colecao('almas').docs.length).toBeGreaterThan(300);
     expect(jogo.missaoAtual!.id).toBe('2.1');
   });
 
   it('é possível jogar todo o conteúdo até o fim', () => {
     const jogo = Jogo.novo();
-    let ultimo: ReturnType<Jogo['executar']> | undefined;
+    let ultimo: ReturnType<Jogo['protocolar']> | undefined;
     for (let i = 0; i < 100 && jogo.missaoAtual; i++) {
+      const id = jogo.missaoAtual.id;
       ultimo = concluirComReferencia(jogo);
-      expect(ultimo.validacao, `falhou em ${ultimo.eventos.length ? '' : jogo.missaoAtual?.id}: ${ultimo.validacao?.motivo}`).toEqual({ ok: true });
+      expect(ultimo.validacao, `falhou em ${id}: ${ultimo.validacao.motivo}`).toEqual({ ok: true });
     }
     expect(jogo.conteudoConcluido).toBe(true);
     expect(ultimo!.eventos).toContainEqual({ tipo: 'fim-do-conteudo' });
@@ -111,7 +123,8 @@ describe('Jogo', () => {
       jogo.revelarDica();
       jogo.revelarDica();
       jogo.revelarDica();
-      expect(jogo.executar(missao.solucaoReferencia).eventos[0]).toMatchObject({ tipo: 'missao-concluida', estrelas: 1 });
+      jogo.executar(missao.solucaoReferencia);
+      expect(jogo.protocolar().eventos[0]).toMatchObject({ tipo: 'missao-concluida', estrelas: 1 });
     }
     expect(jogo.conteudoConcluido).toBe(true);
   });
@@ -137,6 +150,7 @@ describe('Jogo', () => {
   it('salvar e carregar preserva progresso, mundo e credenciais', () => {
     const jogo = Jogo.novo();
     jogo.executar('db.almas.find()');
+    jogo.protocolar();
     const volta = Jogo.carregar(JSON.parse(JSON.stringify(jogo.serializar())));
     expect(volta.progresso.carimbos).toBe(4);
     expect(volta.missaoAtual!.id).toBe('1.2');

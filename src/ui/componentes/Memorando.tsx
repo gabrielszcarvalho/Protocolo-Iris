@@ -22,7 +22,7 @@ export function Memorando() {
     return (
       <article className="memorando papel vazio" data-tutorial="memorando">
         <h2>Caixa vazia</h2>
-        <p>Todos os memorandos desta versão foram cumpridos. A Diretoria prepara os próximos capítulos.</p>
+        <p>Todos os memorandos desta versão foram despachados. A Diretoria prepara os próximos capítulos — sem pressa, ninguém aqui vai a lugar nenhum.</p>
       </article>
     );
   }
@@ -33,6 +33,7 @@ export function Memorando() {
   const dicas = jogo.dicasReveladas(missao);
   const estrelas = jogo.estrelasPara(missao);
   const concluida = situacao === 'concluida';
+  const conferencia = c.conferencia?.missaoId === missao.id ? c.conferencia : undefined;
 
   return (
     <article className="memorando papel" data-tutorial="memorando">
@@ -44,9 +45,9 @@ export function Memorando() {
       </header>
       <dl className="memorando-campos">
         <dt>De</dt>
-        <dd>Diretoria</dd>
+        <dd>Diretoria do Purgatório</dd>
         <dt>Para</dt>
-        <dd>Arquivista-Chefe</dd>
+        <dd>Arquivista-Chefe (falecido)</dd>
         <dt>Assunto</dt>
         <dd>{missao.assunto}</dd>
       </dl>
@@ -56,15 +57,25 @@ export function Memorando() {
         <TextoRico texto={missao.corpo} />
       </p>
 
-      <section className="memorando-objetivos">
+      <section className={`memorando-objetivos ${conferencia?.desatualizada ? 'desatualizada' : ''}`} data-tutorial="objetivos">
         <h3>A entregar</h3>
         <ul>
-          {missao.objetivos.map((o, i) => (
-            <li key={i}>
-              <TextoRico texto={o} />
-            </li>
-          ))}
+          {missao.objetivos.map((o, i) => {
+            const marca = concluida ? true : conferencia?.marcas[i];
+            const classe = marca === undefined ? '' : marca ? 'certo' : 'errado';
+            return (
+              <li key={i} className={classe}>
+                <span className="caixinha" aria-label={marca === undefined ? 'não conferido' : marca ? 'certo' : 'ainda não'}>
+                  {marca === undefined ? '' : marca ? '✓' : '✗'}
+                </span>
+                <span>
+                  <TextoRico texto={o.texto} />
+                </span>
+              </li>
+            );
+          })}
         </ul>
+        {conferencia?.desatualizada && <p className="nota-conferencia">Marcas do último protocolo. Protocole de novo para conferir a resposta atual.</p>}
       </section>
 
       {missao.anexo && (
@@ -94,14 +105,8 @@ export function Memorando() {
       )}
 
       {!concluida && c.parecer && (
-        <div className={`parecer ${c.parecer.protocolado ? 'indeferido' : 'pendente'}`} role="status">
-          {c.parecer.protocolado ? (
-            <>
-              <strong>Indeferido.</strong> {c.parecer.motivo}
-            </>
-          ) : (
-            <>A última resposta ainda não confere. Ajuste e rode de novo — ou protocole para receber o parecer da Diretoria.</>
-          )}
+        <div className="parecer indeferido" role="status">
+          <strong>Indeferido.</strong> {c.parecer.motivo}
         </div>
       )}
 
@@ -123,7 +128,14 @@ export function Memorando() {
 
       {!concluida && (
         <footer className="memorando-acoes">
-          <button className="botao principal" data-tutorial="protocolar" onClick={() => c.protocolar()} disabled={faltando.length > 0}>
+          <p className="memorando-instrucao">Rode a consulta, analise a resposta e só então protocole.</p>
+          <button
+            className="botao principal"
+            data-tutorial="protocolar"
+            onClick={() => c.protocolar()}
+            disabled={faltando.length > 0}
+            title="Envia a ÚLTIMA resposta do terminal para a Diretoria (Ctrl+Shift+Enter)"
+          >
             Protocolar resposta
           </button>
           {dicas.length < 3 && (
