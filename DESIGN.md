@@ -11,8 +11,9 @@ Jogo web single-player (Vite + React + TypeScript, sem backend) em que o jogador
 reais de MongoDB num terminal. Os comandos rodam contra um banco simulado no navegador
 (mingo + camada própria), o resultado é validado **pelo efeito** e o mapa do Departamento reage.
 
-- 12 capítulos, **65 missões de campanha**; a prova de credenciamento (12.6) é modo opcional,
-  fora da campanha.
+- 12 capítulos. O mapa original tinha 65 missões; a versão 1.0 tem **91 memorandos**, porque
+  vários itens do mapa viraram memorandos separados. A prova de credenciamento (12.6) entrou na
+  campanha como último memorando. Os ids reais estão em `src/game/missoes/` e em `CONTEUDO.md`.
 - **Progressão estilo The Farmer Was Replaced:** memorandos rendem **carimbos**; o jogador gasta
   carimbos na **Árvore de Credenciamento** para liberar comandos, um nó por vez, na ordem que
   quiser. Memorando que exige credencial não comprada aparece com cadeado. Usar um comando não
@@ -24,7 +25,13 @@ reais de MongoDB num terminal. Os comandos rodam contra um banco simulado no nav
   apontando terminal, executar, resposta, carimbos, Árvore e Manual, e avisos contextuais que
   aparecem uma vez quando o assunto surge (primeira credencial faltando, primeiro erro, anexo…).
 - Estrelas: 3 sem dicas e com até 1 protocolo recusado; carimbos = base + estrelas − 1.
-- Sandbox independente da campanha, com reset do mundo (próxima etapa).
+- Credenciais só podem ser compradas a partir do capítulo em que são usadas (ninguém gasta
+  carimbo no que ainda não serve). Testes garantem que 1 estrela em tudo e qualquer ordem de
+  compra ainda bastam para terminar o jogo.
+- **Protocolar é manual**: executar nunca conclui o memorando. O jogador analisa a resposta e
+  protocola; os objetivos viram quadradinhos ✓/✗ conferidos um a um.
+- Fora da campanha: **Sala de Treino** e **Expediente contra o relógio** (seções 3.3 e 3.4).
+- Fim de jogo: epílogo em que a ficha de Aurélio Vilaverde (B-1953-0000) é finalmente despachada.
 
 ---
 
@@ -113,11 +120,17 @@ perdem precisão.
 `docsExaminados` vem de um explain simplificado (scan completo vs. intervalo de índice).
 Padrão: 3 = no nível da referência sem dica final; 2 = até 2× a referência; 1 = passou.
 
-### 3.3 Modo Expediente
-Missões concluídas com parâmetros sorteados, contra o relógio. Placar em IndexedDB.
+> **Como ficou na 1.0:** o backlog vivo (3.1) e as métricas de `explain` (3.2) ficaram de fora;
+> as estrelas dependem só de dicas e protocolos recusados.
 
-### 3.4 Sandbox
-Mundo clonado do seed, todos os operadores liberados, botão **"Incinerar e reabrir o arquivo"**.
+### 3.3 Modo Expediente
+Memorandos de consulta já deferidos, embaralhados, contra o relógio (5 minutos), numa cópia do
+arquivo do jogador. Sem dicas e sem carimbos; é possível pular. Memorandos cuja resposta ficaria
+vazia na cópia são descartados. O recorde fica salvo no progresso (IndexedDB).
+
+### 3.4 Sala de Treino (sandbox)
+Cópia do arquivo do jogador, com as credenciais compradas ou todas liberadas (modo estudo), e
+botão para restaurar a cópia. Nada volta para a campanha.
 
 ---
 
@@ -326,7 +339,10 @@ Pontos de atenção:
 
 ## 8. Entregas
 
-1. Scaffold + engine + testes da engine. **← parar e mostrar**
-2. Seed + inspetor + terminal sandbox.
-3. Sistema de missões + capítulos 1–3.
-4. Capítulos 4–6. 5. Capítulo 7. 6. Capítulos 8–11. 7. Capítulo 12 + Expediente + polimento.
+1. Scaffold + engine + testes da engine. ✅
+2. Seed + inspetor + terminal sandbox. ✅
+3. Sistema de missões + capítulos 1–3. ✅
+4. Capítulos 4–6. ✅ 5. Capítulo 7. ✅ 6. Capítulos 8–11. ✅ 7. Capítulo 12 + Expediente + Sala de Treino + polimento. ✅
+
+> A estrutura de pastas da seção 7 é a planejada; a real é `src/engine`, `src/game` (mundo,
+> árvore, missões, validação, treino) e `src/ui`.

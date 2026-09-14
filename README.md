@@ -20,7 +20,13 @@ comandos vão sendo desbloqueados conforme você progride. Sem backend, sem rede
    protocolos recusados reduzem o prêmio, mas nunca impedem de avançar.
 4. Na **Árvore de Credenciamento** você troca carimbos por comandos novos (`findOne`,
    `countDocuments`, `$gt`, `$elemMatch`…). Você começa só com o `find`.
-5. Ao terminar um capítulo, o arquivo cresce: novos setores abrem e centenas de fichas chegam.
+5. Ao terminar um capítulo, o arquivo cresce: novos setores abrem, centenas de fichas chegam e
+   aparecem coleções novas (`arquivistas`, `requerimentos`, `protocolos`).
+6. No **Menu** há dois modos que trabalham numa cópia do arquivo e nunca mexem na campanha:
+   - **Sala de Treino** — terminal livre, com as suas credenciais ou todas liberadas (modo estudo),
+     e botão para restaurar a cópia;
+   - **Expediente contra o relógio** — as consultas que você já deferiu, embaralhadas, em 5
+     minutos. O recorde fica salvo.
 
 Atalhos: `Ctrl+Enter` executa · `↑`/`↓` histórico · `Ctrl+Espaço` sugestões · `Ctrl+K` Manual ·
 `Ctrl+B` Árvore · `Esc` menu.
@@ -39,30 +45,38 @@ npm run build      # build de produção em dist/
 
 O progresso fica salvo no IndexedDB do navegador.
 
-## Conteúdo desta versão (0.2)
+## Conteúdo (versão 1.0)
 
 | Capítulo | Tema | Memorandos |
 |---|---|---|
 | 1. Admissão | `find`, projeção, `findOne`, `countDocuments`, `insertOne`, `insertMany`, `ordered` | 8 |
 | 2. Triagem | igualdade, dot notation, `$gt`…`$ne`, `$and`/`$or`/`$nor`, `$in`/`$nin`, `$exists`, `$type`, `sort`/`skip`/`limit` | 12 |
 | 3. Inventário | arrays, `$all`, `$size`, `$elemMatch` | 4 |
-| 4–12 | Retificação, Anexos, Grafologia, Regulamento, Relatórios, Diretoria | em preparação |
+| 4. Retificação | `updateOne`/`updateMany`, `$set`, `$unset`, `$inc`, `$mul`, `$min`/`$max`, `$rename`, `$currentDate`, `upsert`, `replaceOne`, `delete*`, `drop` | 8 |
+| 5. Anexos | `$push`, `$each`, `$position`, `$sort`/`$slice`, `$addToSet`, `$pull`, `$pop`, `$`, `arrayFilters` | 8 |
+| 6. Grafologia | regex: âncoras, classes, quantificadores, alternância, escape, flag `i`, `$not`, `$elemMatch` | 11 |
+| 7. O Regulamento | `createCollection` + `$jsonSchema`, índice único, `collMod`, `validationLevel`/`validationAction`, auditoria | 8 |
+| 8. A Esteira | `aggregate`, `$match`, `$project`, `$sort`/`$skip`/`$limit`, `$concat` | 5 |
+| 9. O Censo | `$group`, `$sum`, `$first`/`$last`, `$push`/`$addToSet`, duplo `$group`, `$count` | 7 |
+| 10. As Audiências | `$unwind`, `$avg`/`$min`/`$max`, `_id` composto, `$year` | 6 |
+| 11. O Parecer | `$cond` (objeto, lista, aninhado), `$switch`, `$sum`+`$cond`, `$expr`, `$arrayToObject` | 8 |
+| 12. A Diretoria | 3 Vs, replica set e failover, ACID × BASE e CAP, sharding, modelos NoSQL, prova | 6 |
 
-O motor já suporta todo o conteúdo dos capítulos futuros (updates, arrays, regex, validação de
-schema, aggregate); falta escrever os memorandos. Veja [`CONTEUDO.md`](CONTEUDO.md).
+Cada operador da disciplina aponta para o memorando que o exercita em [`CONTEUDO.md`](CONTEUDO.md).
 
 ## Estrutura
 
 ```
 src/engine/   banco MongoDB simulado (mingo + validação de schema, índices, erros do mongosh, shell)
-src/game/     regras: mundo em fases, Árvore de Credenciamento, memorandos, validação, progresso
+src/game/     regras: mundo em fases, Árvore de Credenciamento, memorandos, validação, progresso,
+              Sala de Treino e Expediente
 src/ui/       React: telas (título, abertura, mesa), terminal CodeMirror, mapa, tutorial, painéis
 tests/        engine, missões (referência passa / erro comum falha) e fluxo completo do jogo
 ```
 
 ## Documentos
 
-- [`DESIGN.md`](DESIGN.md) — design do jogo e mapa das 65 missões.
+- [`DESIGN.md`](DESIGN.md) — design do jogo e mapa original das missões.
 - [`CONTEUDO.md`](CONTEUDO.md) — cobertura: cada operador da disciplina → missão.
 
 ## Fidelidade ao MongoDB (e limites conhecidos)
@@ -71,4 +85,6 @@ tests/        engine, missões (referência passa / erro comum falha) e fluxo co
 - `collMod` substitui o validador inteiro; `validationLevel`/`validationAction` têm a semântica real.
 - `updateMany`/`insertMany` não são atômicos: o que foi gravado antes de um erro permanece.
 - Não simulados: transações reais, `$out`/`$merge`, índices de texto/geo, collation.
+- Replica set, sharding e partições de rede (capítulo 12) são **simulados**: `rs.*`, `sh.*` e
+  `diretoria.*` imitam a sintaxe real, e as consequências são calculadas a partir da configuração.
 - O escopo do terminal bloqueia globais do navegador, mas **não é uma sandbox de segurança**.
