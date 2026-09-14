@@ -1,11 +1,26 @@
 # Protocolo Íris
 
-> Você é o novo **Arquivista-Chefe do Departamento de Almas Extraviadas**. O arquivo pegou fogo
-> há décadas; o que sobrou é um banco MongoDB corrompido. Sua única ferramenta é o terminal.
+> Parabéns: sua aprovação saiu. Você é o novo **Arquivista-Chefe do Departamento de Almas
+> Extraviadas**. O arquivo de papel pegou fogo em 1953 e o que sobrou virou um banco MongoDB
+> cheio de erros. Sua única ferramenta é o terminal.
 
-Jogo web single-player para estudar MongoDB (disciplina de Banco de Dados NoSQL): o jogador
-escreve queries, updates e pipelines **reais**, que rodam contra um banco simulado no navegador.
-Sem backend, sem rede em tempo de execução.
+Jogo web single-player para estudar MongoDB (disciplina de Banco de Dados NoSQL), inspirado em
+*The Farmer Was Replaced*: você escreve comandos **reais** do MongoDB, o mundo reage, e novos
+comandos vão sendo desbloqueados conforme você progride. Sem backend, sem rede.
+
+## Como jogar
+
+1. **Memorandos** chegam da Diretoria: cada um é uma tarefa (listar fichas, contar, registrar…).
+2. Você escreve o comando no **terminal** e executa (`Ctrl+Enter`). A resposta aparece como no
+   mongosh, e a **planta do Departamento** acende as fichas encontradas ou alteradas.
+3. Quando a resposta confere, o memorando é **deferido** e rende **carimbos**. Dicas e protocolos
+   recusados reduzem o prêmio.
+4. Na **Árvore de Credenciamento** você troca carimbos por comandos novos (`findOne`,
+   `countDocuments`, `$gt`, `$elemMatch`…). Você começa só com o `find`.
+5. Ao terminar um capítulo, o arquivo cresce: novos setores abrem e centenas de fichas chegam.
+
+Atalhos: `Ctrl+Enter` executa · `↑`/`↓` histórico · `Ctrl+Espaço` sugestões · `Ctrl+K` Manual ·
+`Ctrl+B` Árvore · `Esc` menu.
 
 ## Como rodar
 
@@ -14,52 +29,38 @@ Requisitos: Node.js 20+.
 ```bash
 npm install
 npm run dev        # abre em http://localhost:5173
-npm test           # suíte de testes (Vitest)
-npm run typecheck  # verificação de tipos
+npm test           # testes (engine, missões e regras do jogo)
+npm run typecheck
 npm run build      # build de produção em dist/
 ```
 
-## Estado atual
+O progresso fica salvo no IndexedDB do navegador.
 
-| Etapa | Conteúdo | Situação |
-|------:|----------|----------|
-| 1 | Scaffold + engine (`parseShell`, `db.*`, mingo, IndexedDB) + testes | ✅ concluída |
-| 2 | Seed do mundo + inspetor de coleção + terminal sandbox | ⏳ |
-| 3 | Sistema de missões + capítulos 1–3 | ⏳ |
-| 4 | Capítulos 4–6 | ⏳ |
-| 5 | Capítulo 7 (validação de schema) | ⏳ |
-| 6 | Capítulos 8–11 (aggregate) | ⏳ |
-| 7 | Capítulo 12 + modo Expediente + polimento | ⏳ |
+## Conteúdo desta versão (0.2)
 
-Na etapa 1 a tela é uma **bancada da engine**: um terminal com um mundo de demonstração
-pequeno, painel de coleções e log do servidor. O estado é salvo no IndexedDB do navegador;
-o botão "Incinerar e reabrir o arquivo" restaura o mundo inicial.
+| Capítulo | Tema | Memorandos |
+|---|---|---|
+| 1. Admissão | `find`, projeção, `findOne`, `countDocuments`, `insertOne`, `insertMany`, `ordered` | 8 |
+| 2. Triagem | igualdade, dot notation, `$gt`…`$ne`, `$and`/`$or`/`$nor`, `$in`/`$nin`, `$exists`, `$type`, `sort`/`skip`/`limit` | 12 |
+| 3. Inventário | arrays, `$all`, `$size`, `$elemMatch` | 4 |
+| 4–12 | Retificação, Anexos, Grafologia, Regulamento, Relatórios, Diretoria | em preparação |
+
+O motor já suporta todo o conteúdo dos capítulos futuros (updates, arrays, regex, validação de
+schema, aggregate); falta escrever os memorandos. Veja [`CONTEUDO.md`](CONTEUDO.md).
 
 ## Estrutura
 
 ```
-src/engine/       motor de banco simulado (sem React)
-  bson.ts         ObjectId, ISODate, NumberInt, tipos BSON, EJSON
-  errors.ts       erros no formato do mongosh + tradução didática
-  jsonSchema.ts   validador $jsonSchema com semântica do MongoDB
-  indexes.ts      índices únicos (E11000)
-  mingoCtx.ts     configuração do mingo ($type e $jsonSchema próprios)
-  cursor.ts       cursores preguiçosos (sort/skip/limit, paginação "it")
-  collection.ts   CRUD, aggregate, validação, índices
-  database.ts     coleções, createCollection, runCommand/collMod, log, snapshot
-  credenciais.ts  operadores liberados por capítulo + inspeção do pipeline
-  explain.ts      documentos examinados (para os carimbos de eficiência)
-  format.ts       impressão no estilo do mongosh
-  shell.ts        o terminal: escopo controlado, múltiplas instruções, show/use/it
-  persist.ts      IndexedDB
-src/ui/           interface React
-tests/engine/     testes da engine
+src/engine/   banco MongoDB simulado (mingo + validação de schema, índices, erros do mongosh, shell)
+src/game/     regras: mundo em fases, Árvore de Credenciamento, memorandos, validação, progresso
+src/ui/       React: telas (título, abertura, mesa), terminal CodeMirror, mapa, tutorial, painéis
+tests/        engine, missões (referência passa / erro comum falha) e fluxo completo do jogo
 ```
 
 ## Documentos
 
 - [`DESIGN.md`](DESIGN.md) — design do jogo e mapa das 65 missões.
-- [`CONTEUDO.md`](CONTEUDO.md) — cobertura: cada operador da disciplina → missão que o exercita.
+- [`CONTEUDO.md`](CONTEUDO.md) — cobertura: cada operador da disciplina → missão.
 
 ## Fidelidade ao MongoDB (e limites conhecidos)
 
@@ -67,5 +68,4 @@ tests/engine/     testes da engine
 - `collMod` substitui o validador inteiro; `validationLevel`/`validationAction` têm a semântica real.
 - `updateMany`/`insertMany` não são atômicos: o que foi gravado antes de um erro permanece.
 - Não simulados: transações reais, `$out`/`$merge`, índices de texto/geo, collation.
-- O escopo do terminal bloqueia globais do navegador, mas **não é uma sandbox de segurança**;
-  é adequado para um jogo local, sem rede e sem dados sensíveis.
+- O escopo do terminal bloqueia globais do navegador, mas **não é uma sandbox de segurança**.

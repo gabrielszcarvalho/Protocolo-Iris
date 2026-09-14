@@ -13,9 +13,18 @@ reais de MongoDB num terminal. Os comandos rodam contra um banco simulado no nav
 
 - 12 capítulos, **65 missões de campanha**; a prova de credenciamento (12.6) é modo opcional,
   fora da campanha.
-- Cada capítulo desbloqueia operadores; usar um operador bloqueado gera erro diegético:
-  `CredencialError: Comando '$unwind' não consta no seu nível de credenciamento (exige: Capítulo 10).`
-- Sandbox independente da campanha, com reset do mundo.
+- **Progressão estilo The Farmer Was Replaced:** memorandos rendem **carimbos**; o jogador gasta
+  carimbos na **Árvore de Credenciamento** para liberar comandos, um nó por vez, na ordem que
+  quiser. Memorando que exige credencial não comprada aparece com cadeado. Usar um comando não
+  comprado gera erro diegético:
+  `CredencialError: Comando 'findOne' não consta no seu nível de credenciamento (requer: Leitura Rápida).`
+- Capítulos abrem ao concluir todos os memorandos do anterior; ao abrir, o **mundo cresce**
+  (fase 1: 8 fichas em 2 setores; fase 2: 300 fichas em 5 setores, com sujeira legada).
+- Experiência de jogo: tela de título, abertura curta (4 cartas), **tutorial guiado** com caixinhas
+  apontando terminal, executar, resposta, carimbos, Árvore e Manual, e avisos contextuais que
+  aparecem uma vez quando o assunto surge (primeira credencial faltando, primeiro erro, anexo…).
+- Estrelas: 3 sem dicas e com até 1 protocolo recusado; carimbos = base + estrelas − 1.
+- Sandbox independente da campanha, com reset do mundo (próxima etapa).
 
 ---
 
