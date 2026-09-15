@@ -211,13 +211,14 @@ export const capitulo2: Capitulo = {
       id: '2.10',
       titulo: 'Fichas rasgadas',
       assunto: 'CEPs perdidos',
-      corpo: 'Os Correios do além devolveram cartas. Traga as almas que não têm o campo `cep` dentro de `endereco` — inclusive as que nem têm endereço.',
+      corpo:
+        'Os Correios do além devolveram cartas: falta o CEP. Traga TODAS as almas cuja ficha não tem `endereco.cep`. Isso acontece de dois jeitos: fichas que têm o subdocumento `endereco`, mas sem o campo `cep` dentro dele; e fichas rasgadas, sem o `endereco` inteiro (e, portanto, sem CEP também).',
       objetivos: [
         objetivo(
-          'Todas as almas que têm endereço, mas sem cep.',
+          'As que têm endereco, mas sem cep dentro dele.',
           todas(todasSao((d) => lerCaminho(d, 'endereco.cep') === undefined), incluiTodasQue((d) => 'endereco' in d && lerCaminho(d, 'endereco.cep') === undefined)),
         ),
-        objetivo('E também as que nem têm endereço.', incluiTodasQue((d) => !('endereco' in d))),
+        objetivo('E também as que não têm endereco nenhum.', incluiTodasQue((d) => !('endereco' in d))),
       ],
       requer: ['pericia-de-fichas'],
       tipo: 'consulta',
@@ -226,7 +227,8 @@ export const capitulo2: Capitulo = {
       solucoesErradas: [{ codigo: 'db.almas.find({ endereco: { $exists: false } })', porque: 'só pegou quem não tem endereço' }],
       dicas: ['O que importa aqui é a PRESENÇA do campo, não o valor.', '$exists: false traz documentos sem o campo. Combine com dot notation.', "db.almas.find({ 'endereco.cep': { $exists: false } })"],
       recompensa: 3,
-      licao: '$exists testa se o campo existe. Com dot notation, também pega quem não tem o subdocumento.',
+      licao:
+        "$exists: false traz quem não tem o campo. Com dot notation ('endereco.cep'), isso inclui os dois casos: subdocumento sem o campo e documento sem o subdocumento.",
     },
     {
       id: '2.11',
