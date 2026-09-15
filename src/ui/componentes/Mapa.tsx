@@ -27,6 +27,7 @@ export function Mapa() {
     porSetor.set(setor, [...(porSetor.get(setor) ?? []), d]);
   }
   const triagem = porSetor.get('Triagem') ?? [];
+  const destinos = { ceu: docs.filter((d) => d.destino === 'Céu').length, inferno: docs.filter((d) => d.destino === 'Inferno').length };
   const algumDestaque = marcas.encontrados.size + marcas.inseridos.size + marcas.alterados.size > 0;
 
   return (
@@ -39,7 +40,7 @@ export function Mapa() {
       </header>
 
       <div className="portal portal-ceu">
-        <span>↑ Céu</span>
+        <span>↑ Céu{destinos.ceu > 0 && ` · ${destinos.ceu} a caminho`}</span>
         <small>saída exclusiva para fichas deferidas</small>
       </div>
 
@@ -98,7 +99,7 @@ export function Mapa() {
       </div>
 
       <div className="portal portal-inferno">
-        <span>↓ Inferno</span>
+        <span>↓ Inferno{destinos.inferno > 0 && ` · ${destinos.inferno} condenadas`}</span>
         <small>não perturbe as caldeiras</small>
       </div>
 

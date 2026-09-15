@@ -105,7 +105,8 @@ export function Sobreposicoes() {
               <p className="cartao-sobre">Protocolo B-1953-0000 · deferido</p>
               <h2>O relatório de Aurélio</h2>
               <p className="capitulo-texto">
-                O Conselho carimbou sua Prova e, no mesmo despacho, encerrou a ficha mais antiga do Limbo: Aurélio Vilaverde, o arquivista
+                Com o Juízo encerrado — cada alma no seu lugar, Céu acima, caldeiras abaixo —, o Conselho despachou por fim a ficha mais
+                antiga do Limbo: Aurélio Vilaverde, o arquivista
                 que morreu em 1953 com um “relatório não entregue”. O relatório era este arquivo — organizado, validado, replicado e
                 finalmente legível. Quem o terminou foi você.
               </p>
