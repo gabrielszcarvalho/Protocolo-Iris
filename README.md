@@ -24,7 +24,9 @@ comandos vão sendo desbloqueados conforme você progride. Sem backend, sem rede
    aparecem coleções novas (`arquivistas`, `requerimentos`, `protocolos`).
 6. No **Menu** há dois modos que trabalham numa cópia do arquivo e nunca mexem na campanha:
    - **Sala de Treino** — terminal livre, com as suas credenciais ou todas liberadas (modo estudo),
-     e botão para restaurar a cópia;
+     e **Gerar memorando**: exercícios sorteados por assunto (consultas, arrays, regex, gravações,
+     relatórios), corrigidos como na campanha. Dá para abrir vários, pular, descartar e ver a
+     solução; cada memorando tem o seu próprio arquivo e o "Restaurar" vale só para o aberto;
    - **Expediente contra o relógio** — as consultas que você já deferiu, embaralhadas, em 5
      minutos. O recorde fica salvo.
 
