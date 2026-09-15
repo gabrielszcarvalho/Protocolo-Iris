@@ -23,6 +23,7 @@ export const FASES: Fase[] = [
   { numero: 2, titulo: 'O Porão', setoresAbertos: [...SETORES] },
   { numero: 3, titulo: 'A Repartição', setoresAbertos: [...SETORES] },
   { numero: 4, titulo: 'O Regulamento', setoresAbertos: [...SETORES] },
+  { numero: 5, titulo: 'O Juízo', setoresAbertos: [...SETORES] },
 ];
 
 // ---------------------------------------------------------------------------
@@ -471,6 +472,83 @@ export function gerarRequerimentos(semente = 0x7e9): Record<string, unknown>[] {
 // Montagem
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Fase 5: o Juízo (capítulo 13) — almas plantadas para derrubar os erros clássicos
+// ---------------------------------------------------------------------------
+
+export const IDS_DO_JUIZO = {
+  serafina: new ObjectId('5f1953c00000000000000001'),
+  anacleto: new ObjectId('5f1953c00000000000000002'),
+  belmiro: new ObjectId('5f1953c00000000000000003'),
+  olinda: new ObjectId('5f1953c00000000000000004'),
+  rufino: new ObjectId('5f1953c00000000000000005'),
+  tobias: new ObjectId('5f1953c00000000000000006'),
+};
+
+export function almasDoJuizo(): Record<string, unknown>[] {
+  const endereco = (rua: string, numero: string, bairro: string, cep: string, uf: string) => ({ rua, numero, bairro, cep, uf });
+  return [
+    {
+      // Merece o Céu (só pareceres A e B), mas o protocolo tem um espaço no começo: a norma das sentenças recusa.
+      _id: IDS_DO_JUIZO.serafina, protocolo: ' A-1960-0144', nome: 'Serafina Luz', setor: 'Ante-Sala',
+      pendencia: 'Promessa não cumprida', anos_pendentes: 64, falecimento: dataUTC('1960-02-11'),
+      endereco: endereco('Rua das Almas', '144', 'Bexiga', '01317-144', 'SP'),
+      vinculos: ['avó', 'poeta'],
+      audiencias: [{ parecer: 'A', peso: 30, data: dataUTC('1970-03-03') }, { parecer: 'B', peso: 22, data: dataUTC('1990-04-04') }],
+      ativo: true,
+    },
+    {
+      // Tem um parecer A, mas também um C: não vai para o Céu (derruba "pelo menos uma audiência boa").
+      _id: IDS_DO_JUIZO.anacleto, protocolo: 'A-1971-0321', nome: 'Anacleto Cinza', setor: 'Ante-Sala',
+      pendencia: 'Relógio não devolvido', anos_pendentes: 53, falecimento: dataUTC('1971-07-21'),
+      endereco: endereco('Travessa do Relógio', '321', 'Lapa', '20241-321', 'RJ'),
+      vinculos: ['padeiro'],
+      audiencias: [{ parecer: 'A', peso: 40, data: dataUTC('1980-01-01') }, { parecer: 'C', peso: 2, data: dataUTC('2000-01-01') }],
+      ativo: true,
+    },
+    {
+      // Condenado (Z com peso 48 e dívida). Tem mãe: recorre. O Z de 48 continua Z depois do recurso.
+      _id: IDS_DO_JUIZO.belmiro, protocolo: 'B-1911-0666', nome: 'Belmiro Trevas', setor: 'Correspondência',
+      pendencia: 'Dívida de jogo', anos_pendentes: 88, falecimento: dataUTC('1911-06-06'),
+      endereco: endereco('Beco do Esquecimento', '666', 'Cidade Baixa', '90050-666', 'RS'),
+      vinculos: ['mãe', 'ex-sócio'],
+      audiencias: [{ parecer: 'Z', peso: 48, data: dataUTC('1930-06-06') }, { parecer: 'A', peso: 5, data: dataUTC('1950-06-06') }],
+      ativo: true,
+    },
+    {
+      // Mesmo protocolo de Belmiro (só uma sentença entra), anos_pendentes em texto e DOIS Z abaixo de 45.
+      _id: IDS_DO_JUIZO.olinda, protocolo: 'B-1911-0666', nome: 'Olinda Brasa', setor: 'Arquivo Morto',
+      pendencia: 'Herança disputada', anos_pendentes: '52', falecimento: dataUTC('1911-06-07'),
+      endereco: endereco('Rua do Aqueduto', '13', 'Centro', '66010-013', 'PA'),
+      vinculos: ['mãe'],
+      audiencias: [{ parecer: 'Z', peso: 41, data: dataUTC('1920-02-02') }, { parecer: 'Z', peso: 12, data: dataUTC('1921-02-02') }],
+      ativo: true,
+    },
+    {
+      // Um Z leve e um peso alto em OUTRA audiência: com dot notation, iria para o Inferno por engano.
+      _id: IDS_DO_JUIZO.rufino, protocolo: 'A-1942-0808', nome: 'Rufino Vapor', setor: 'Purgatório',
+      pendencia: 'Herança disputada', anos_pendentes: 70, falecimento: dataUTC('1942-08-08'),
+      endereco: endereco('Ladeira do Carmo', '808', 'Recife Antigo', '50030-808', 'PE'),
+      vinculos: ['pai'],
+      audiencias: [{ parecer: 'Z', peso: 10, data: dataUTC('1950-08-08') }, { parecer: 'A', peso: 42, data: dataUTC('1960-08-08') }],
+      ativo: true,
+    },
+    {
+      // Continua entre os dois: é o caso garantido do último despacho.
+      _id: IDS_DO_JUIZO.tobias, protocolo: 'A-1988-0909', nome: 'Tobias dos Anjos', setor: 'Purgatório',
+      pendencia: 'Carta não entregue', anos_pendentes: 61, falecimento: dataUTC('1988-09-09'),
+      endereco: endereco('Rua Direita', '909', 'Savassi', '30140-909', 'MG'),
+      vinculos: ['pai'],
+      audiencias: [
+        { parecer: 'B', peso: 20, data: dataUTC('1995-09-09') },
+        { parecer: 'C', peso: 15, data: dataUTC('2005-09-09') },
+        { parecer: 'B', peso: 8, data: dataUTC('2015-09-09') },
+      ],
+      ativo: true,
+    },
+  ];
+}
+
 export function criarMundo(fase = 1): Database {
   const db = new Database();
   db.colecao('almas').insertMany(fichasDaFase1());
@@ -496,6 +574,8 @@ export function aplicarFase(db: Database, fase: number): void {
       almas.insertMany(fichasEspeciaisDaFase3());
     }
     if (fase >= 4 && !db.existe('requerimentos')) db.colecao('requerimentos').insertMany(gerarRequerimentos());
+    const idsDoJuizo = new Set(Object.values(IDS_DO_JUIZO).map((id) => canonico(id)));
+    if (fase >= 5 && !almas.docs.some((d) => idsDoJuizo.has(canonico(d._id)))) almas.insertMany(almasDoJuizo());
   } finally {
     db.verificador = verificador;
     db.historico.length = 0;
