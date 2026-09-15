@@ -2380,3 +2380,87 @@ kbd {
   gap: 0.5rem;
   justify-content: center;
 }
+
+/* ------------------------------------------------------------------ Memorandos de treino */
+
+.treino-gerar {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.6rem 0;
+}
+
+.treino-gerar select {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35rem 0.4rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--tinta);
+  background: var(--papel-2);
+  border: 1px solid var(--papel-3);
+}
+
+.treino-abas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+}
+
+.treino-aba {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--papel-3);
+  background: var(--papel-2);
+  font-size: 0.8rem;
+}
+
+.treino-aba button,
+button.treino-aba {
+  padding: 0.2rem 0.5rem;
+  font: inherit;
+  color: var(--tinta-2);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+button.treino-aba {
+  border: 1px solid var(--papel-3);
+}
+
+.treino-aba.ativa {
+  background: var(--tinta);
+  border-color: var(--tinta);
+}
+
+.treino-aba.ativa button,
+button.treino-aba.ativa {
+  color: var(--papel);
+}
+
+.treino-aba.deferida:not(.ativa) button:first-child {
+  color: var(--musgo);
+}
+
+.treino-fechar {
+  opacity: 0.6;
+}
+
+.treino-fechar:hover {
+  opacity: 1;
+  color: var(--carimbo) !important;
+}
+
+.treino-nota,
+.treino-assunto {
+  margin: 0.3rem 0 0.6rem;
+  font-size: 0.75rem;
+  color: var(--tinta-3);
+}
+
+.treino-assunto {
+  margin-top: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}

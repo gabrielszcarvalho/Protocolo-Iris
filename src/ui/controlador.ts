@@ -17,6 +17,7 @@ import { inferirEsquema } from './inferencia';
 import { TODAS_AS_MISSOES } from '../game/missoes';
 import { TODAS_AS_CREDENCIAIS } from '../game/arvore';
 import { Expediente, SalaDeTreino } from '../game/treino';
+import type { AssuntoTreino } from '../game/gerador';
 import type { Database } from '../engine/database';
 import type { ResultadoExecucao } from '../engine/shell';
 import { CredencialError } from '../engine/errors';
@@ -96,6 +97,8 @@ export class Controlador {
   parecerExpediente?: { missaoId: string; validacao: ResultadoValidacao; marcas: boolean[] };
   resumoExpediente?: { deferidos: number; pulados: number; recorde: boolean };
   private blocosCampanha: BlocoSaida[] = [];
+  /** Saída do terminal de cada arquivo da Sala de Treino ('livre' ou o id do memorando). */
+  private readonly blocosTreino = new Map<string, BlocoSaida[]>();
 
   // --- infraestrutura de assinatura -----------------------------------------
 
@@ -259,7 +262,7 @@ export class Controlador {
 
   protocolar() {
     if (this.modo === 'expediente') return this.protocolarNoExpediente();
-    if (this.modo === 'treino') return;
+    if (this.modo === 'treino') return this.protocolarNoTreino();
     const jogo = this.jogo;
     const missao = jogo?.missaoAtual;
     if (!jogo || !missao) return;
@@ -425,6 +428,7 @@ export class Controlador {
     const jogo = this.jogo;
     if (!jogo) return;
     this.entrarNoModo('treino');
+    this.blocosTreino.clear();
     this.treino = new SalaDeTreino(jogo.mundo, () => jogo.possui);
     som.clique();
     this.mudou();
@@ -453,10 +457,82 @@ export class Controlador {
   }
 
   reiniciarTreino() {
-    if (!this.treino) return;
-    this.treino.reiniciar();
-    this.blocos = [...this.blocos, { id: ++this.seq, comando: '(restaurar cópia)', linhas: [{ tipo: 'info', texto: 'A cópia do arquivo voltou ao estado em que a Sala de Treino foi aberta.' }] }];
+    const treino = this.treino;
+    if (!treino) return;
+    treino.reiniciar();
+    const texto = treino.ativo
+      ? `O arquivo do memorando ${treino.ativo.missao.id} voltou ao estado em que ele chegou. Os outros não foram tocados.`
+      : 'O arquivo do terminal livre voltou ao estado em que a Sala de Treino foi aberta. Os memorandos não foram tocados.';
+    this.blocos = [...this.blocos, { id: ++this.seq, comando: '(restaurar arquivo)', linhas: [{ tipo: 'info', texto }] }];
     this.destaque = SEM_DESTAQUE;
+    this.mudou();
+  }
+
+  private get chaveTreino() {
+    return this.treino?.ativo?.missao.id ?? 'livre';
+  }
+
+  /** Troca o arquivo aberto na Sala guardando a saída do terminal de cada um. */
+  private trocarArquivoTreino(acao: () => void) {
+    this.blocosTreino.set(this.chaveTreino, this.blocos);
+    acao();
+    this.blocos = this.blocosTreino.get(this.chaveTreino) ?? [];
+    this.destaque = SEM_DESTAQUE;
+    this.aba = 'resultado';
+    som.clique();
+    this.mudou();
+  }
+
+  gerarMemorandoTreino(assunto?: AssuntoTreino) {
+    const treino = this.treino;
+    if (!treino) return;
+    let gerado = false;
+    this.trocarArquivoTreino(() => {
+      gerado = !!treino.gerar(assunto);
+    });
+    if (!gerado) {
+      this.adicionarToast('Nenhum exercício desse assunto cabe nas suas credenciais. Marque “Liberar todas as credenciais” ou escolha outro assunto.');
+      this.mudou();
+    }
+  }
+
+  abrirArquivoTreino(id: string | null) {
+    const treino = this.treino;
+    if (!treino) return;
+    this.trocarArquivoTreino(() => treino.abrir(id));
+  }
+
+  pularMemorandoTreino() {
+    const treino = this.treino;
+    const atual = treino?.ativo;
+    if (!treino || !atual) return;
+    this.trocarArquivoTreino(() => {
+      if (treino.pular()) this.blocosTreino.delete(atual.missao.id);
+    });
+  }
+
+  descartarMemorandoTreino(id: string) {
+    const treino = this.treino;
+    if (!treino) return;
+    this.trocarArquivoTreino(() => treino.descartar(id));
+    this.blocosTreino.delete(id);
+  }
+
+  revelarDicaTreino() {
+    this.treino?.ativo?.revelarDica();
+    this.mudou();
+  }
+
+  private protocolarNoTreino() {
+    const mesa = this.treino?.ativo;
+    if (!mesa || mesa.deferido) return;
+    const r = mesa.protocolar();
+    if (r.validacao.ok) {
+      som.carimbo();
+      this.adicionarToast(`Deferido: ${mesa.missao.titulo}. Gere outro quando quiser.`);
+    } else {
+      som.indeferido();
+    }
     this.mudou();
   }
 
