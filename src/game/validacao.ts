@@ -308,7 +308,8 @@ export function compararResultado(obtido: unknown, esperado: unknown, opts: Opco
     };
   }
 
-  if (opts.relatorio && lista.some((d) => ehObjetoSimples(d) && !('protocolo' in d))) {
+  // Linhas de relatório: sem _id (projeção) ou sem os campos de uma ficha (agrupamento).
+  if (opts.relatorio && lista.some((d) => ehObjetoSimples(d) && (!('_id' in d) || !('setor' in d)))) {
     return diagnosticoDeRelatorio(obtido, lista, extras, faltantes);
   }
 
@@ -434,7 +435,7 @@ export function validarEscrita(opts: OpcoesEscrita): Validador {
     const remFaltam = esperado.removidos.filter((d) => !remObtidos.has(canonico(d._id)));
     const remSobram = obtido.removidos.filter((d) => !remEsperados.has(canonico(d._id)));
     if (remFaltam.length) partes.push(`Ainda falta remover ${fichas(remFaltam.length)}.`);
-    if (remSobram.length) partes.push(`${fichas(remSobram.length)} foram removidas sem necessidade: ${remSobram.slice(0, 5).map(resumoDaFicha).join(', ')}.`);
+    if (remSobram.length) partes.push(`${fichas(remSobram.length)} ${remSobram.length === 1 ? 'foi removida' : 'foram removidas'} sem necessidade: ${remSobram.slice(0, 5).map(resumoDaFicha).join(', ')}.`);
 
     // Alterações
     const altObtidos = new Map(obtido.alterados.map((a) => [canonico(a.depois._id), canonico(a.depois)]));
@@ -447,8 +448,8 @@ export function validarEscrita(opts: OpcoesEscrita): Validador {
     }
     const altSobram = [...altObtidos.keys()].filter((id) => !altEsperados.has(id)).length;
     if (altFaltam) partes.push(`Faltam alterar ${fichas(altFaltam)}.`);
-    if (altErradas) partes.push(`${fichas(altErradas)} foram alteradas, mas não do jeito pedido.`);
-    if (altSobram) partes.push(`${fichas(altSobram)} foram alteradas sem necessidade.`);
+    if (altErradas) partes.push(`${fichas(altErradas)} ${altErradas === 1 ? 'foi alterada' : 'foram alteradas'}, mas não do jeito pedido.`);
+    if (altSobram) partes.push(`${fichas(altSobram)} ${altSobram === 1 ? 'foi alterada' : 'foram alteradas'} sem necessidade.`);
 
     if (partes.length) return { ok: false, motivo: `${partes.join(' ')} ${RECOMECAR}` };
 
