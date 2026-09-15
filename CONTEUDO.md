@@ -124,6 +124,21 @@ Legenda: ✅ implementado e testado · 🧪 simulado (sem servidor real por trá
 | `$push` (acumulador) + `$arrayToObject` | 11.8 | ✅ |
 | `$lookup` *(bônus, só no terminal)* | — | ✅ |
 
+## Capítulo 13 — Entre o Céu e o Inferno (revisão integrada)
+
+Cada memorando junta vários assuntos e tem almas plantadas no arquivo (fase 5, “O Juízo”) para
+derrubar os erros clássicos.
+
+| Memorando | Conceitos combinados | Armadilha |
+|---|---|---|
+| 13.1 A balança | `$match` com `$in`/`$exists`, `$unwind`, `$group` por `_id` com `$first`, `$sum` + `$cond` + `$in` + `$multiply`, `$sort`, `$limit`, `$project` | almas homônimas; ativas apenas |
+| 13.2 O veredito | `updateMany`, `$nin` em array (“todas”), `$elemMatch`, regex com alternância | uma audiência boa não basta; Z e peso em audiências diferentes |
+| 13.3 O Livro do Juízo | `createCollection` + `$jsonSchema` (`pattern`, `enum`, `minLength`, `int`), índice único, `find().toArray().map()`, `insertMany` com `ordered: false` | protocolo com espaço, protocolo repetido |
+| 13.4 O recurso das mães | `$push` + `$each` + `$position`, `arrayFilters` com duas condições | posicional `$` só troca o primeiro |
+| 13.5 A contabilidade do além | `$group` com `$ifNull` no `_id`, `$avg` + `$cond` + `$type` + `$toInt`, `$sum` + `$cond`, `$project`, `$sort` | anos em texto somem do `$avg` |
+| 13.6 Os portões | `distinct` + `$in`, `deleteMany`, `updateMany` com `$ne`, `$set` + `$unset` | quem não tem sentença não sobe; quem recorreu não desce |
+| 13.7 O último despacho | `$exists`, `$in`, regex com `\s`, `$type` + `$gt`, `$expr` + `$size` + `$ifNull`, projeção, `sort`, `limit` | regex sem espaços pega “de” no meio do nome |
+
 ## Teoria
 
 | Tema | Memorandos | Engine |

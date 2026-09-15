@@ -11,7 +11,9 @@ Jogo web single-player (Vite + React + TypeScript, sem backend) em que o jogador
 reais de MongoDB num terminal. Os comandos rodam contra um banco simulado no navegador
 (mingo + camada própria), o resultado é validado **pelo efeito** e o mapa do Departamento reage.
 
-- 12 capítulos. O mapa original tinha 65 missões; a versão 1.0 tem **91 memorandos**, porque
+- 13 capítulos. O capítulo 13, *Entre o Céu e o Inferno*, é uma revisão integrada e difícil
+  (o Juízo das almas), com uma fase de mundo própria (5, “O Juízo”) cheia de armadilhas.
+  O mapa original tinha 65 missões; a versão 1.0 tinha **91 memorandos**, agora **98**, porque
   vários itens do mapa viraram memorandos separados. A prova de credenciamento (12.6) entrou na
   campanha como último memorando. Os ids reais estão em `src/game/missoes/` e em `CONTEUDO.md`.
 - **Progressão estilo The Farmer Was Replaced:** memorandos rendem **carimbos**; o jogador gasta

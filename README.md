@@ -63,6 +63,7 @@ O progresso fica salvo no IndexedDB do navegador.
 | 10. As Audiências | `$unwind`, `$avg`/`$min`/`$max`, `_id` composto, `$year` | 6 |
 | 11. O Parecer | `$cond` (objeto, lista, aninhado), `$switch`, `$sum`+`$cond`, `$expr`, `$arrayToObject` | 8 |
 | 12. A Diretoria | 3 Vs, replica set e failover, ACID × BASE e CAP, sharding, modelos NoSQL, prova | 6 |
+| 13. Entre o Céu e o Inferno | tudo misturado e difícil: o Juízo das almas (aggregate com `$cond`, `$nin`/`$elemMatch` em arrays, norma + índice único + `ordered: false`, `$position` + `arrayFilters`, `$ifNull`/`$toInt`, `distinct` + `$in`, `$expr`) | 7 |
 
 Cada operador da disciplina aponta para o memorando que o exercita em [`CONTEUDO.md`](CONTEUDO.md).
 
