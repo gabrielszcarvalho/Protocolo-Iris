@@ -40,7 +40,7 @@ export function Menu() {
                 Voltar aos memorandos
               </button>
             )}
-            {c.modo === 'campanha' && (
+            {c.modo !== 'expediente' && (
               <button className="botao" onClick={() => c.reverTutorial()}>
                 Rever o tutorial
               </button>

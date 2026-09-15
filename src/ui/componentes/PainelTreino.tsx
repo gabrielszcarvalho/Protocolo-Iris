@@ -19,7 +19,7 @@ function MemorandoDeTreino({ mesa }: { mesa: MesaDeMemorando }) {
         <TextoRico texto={missao.corpo} />
       </p>
 
-      <section className="memorando-objetivos">
+      <section className="memorando-objetivos" data-tutorial="objetivos">
         <h3>A entregar</h3>
         <ul>
           {missao.objetivos.map((o, i) => {
@@ -64,9 +64,9 @@ function MemorandoDeTreino({ mesa }: { mesa: MesaDeMemorando }) {
         </section>
       )}
 
-      <footer className="memorando-acoes">
+      <footer className="memorando-acoes" data-tutorial="treino-acoes">
         {!mesa.deferido && (
-          <button className="botao principal" onClick={() => c.protocolar()} title="Ctrl+Shift+Enter">
+          <button className="botao principal" onClick={() => c.protocolar()} title="Ctrl+Shift+Enter" data-tutorial="protocolar">
             Protocolar resposta
           </button>
         )}
@@ -103,7 +103,7 @@ export function PainelTreino() {
         <span>fora do expediente · não vale carimbo</span>
       </header>
 
-      <div className="treino-gerar">
+      <div className="treino-gerar" data-tutorial="treino-gerar">
         <select value={assunto} onChange={(e) => setAssunto(e.target.value as AssuntoTreino | '')} aria-label="Assunto do memorando">
           <option value="">Qualquer assunto</option>
           {ASSUNTOS_TREINO.map((a) => (
@@ -117,7 +117,7 @@ export function PainelTreino() {
         </button>
       </div>
 
-      <nav className="treino-abas" aria-label="Arquivos abertos">
+      <nav className="treino-abas" aria-label="Arquivos abertos" data-tutorial="treino-abas">
         <button className={`treino-aba ${ativo ? '' : 'ativa'}`} onClick={() => c.abrirArquivoTreino(null)}>
           Terminal livre
         </button>
@@ -145,7 +145,7 @@ export function PainelTreino() {
             memorandos de treino.
           </p>
 
-          <label className="alternador">
+          <label className="alternador" data-tutorial="treino-livre">
             <input type="checkbox" checked={treino.todasAsCredenciais} onChange={() => c.alternarTodasCredenciais()} />
             <span>
               <strong>Liberar todas as credenciais</strong>

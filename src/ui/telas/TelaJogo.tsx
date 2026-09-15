@@ -70,7 +70,7 @@ export function TelaJogo() {
           <button className="botao-barra" data-tutorial="botao-manual" onClick={() => c.abrirPainel('manual')}>
             Manual <kbd>Ctrl+K</kbd>
           </button>
-          <button className="botao-barra icone" onClick={() => c.abrirPainel('menu')} aria-label="Menu">
+          <button className="botao-barra icone" onClick={() => c.abrirPainel('menu')} aria-label="Menu" data-tutorial="botao-menu">
             ☰
           </button>
         </nav>

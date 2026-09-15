@@ -12,7 +12,7 @@ import type { LinhaSaida } from '../engine/shell';
 import type { ResultadoValidacao } from '../game/validacao';
 import { Armazenamento } from '../engine/persist';
 import { som } from './som';
-import { AVISOS, PASSOS_TUTORIAL, type AvisoContextual } from './tutorialDados';
+import { AVISOS, ROTEIROS, type AvisoContextual, type Roteiro } from './tutorialDados';
 import { inferirEsquema } from './inferencia';
 import { TODAS_AS_MISSOES } from '../game/missoes';
 import { TODAS_AS_CREDENCIAIS } from '../game/arvore';
@@ -87,6 +87,8 @@ export class Controlador {
   parecer?: ResultadoValidacao;
   conferencia?: Conferencia;
   ultimaExecucaoOk = false;
+  /** Qual tutorial está (ou estaria) em andamento: o da campanha ou o da Sala de Treino. */
+  roteiro: Roteiro = 'campanha';
   aba: AbaSaida = 'resultado';
   somLigado = true;
   pedidoEditor?: { id: number; texto: string };
@@ -173,7 +175,10 @@ export class Controlador {
 
   concluirAbertura() {
     this.tela = 'jogo';
-    if (this.jogo && !this.jogo.progresso.tutorialConcluido) this.tutorial = 0;
+    if (this.jogo && !this.jogo.progresso.tutorialConcluido) {
+      this.roteiro = 'campanha';
+      this.tutorial = 0;
+    }
     this.mudou();
   }
 
@@ -207,7 +212,7 @@ export class Controlador {
 
   setTextoEditor(texto: string) {
     this.textoEditor = texto;
-    if (this.tutorial !== null && PASSOS_TUTORIAL[this.tutorial].espera) this.checarTutorial();
+    if (this.tutorial !== null && this.passosTutorial[this.tutorial].espera) this.checarTutorial();
   }
 
   inserirNoEditor(texto: string) {
@@ -228,6 +233,8 @@ export class Controlador {
       const t = bancada.executar(texto);
       this.registrarBloco(texto, t.execucao);
       this.destaque = t.destaque;
+      this.ultimaExecucaoOk = t.execucao.ok && t.execucao.operacoes.length > 0;
+      this.checarTutorial();
       if (!t.execucao.ok) som.erro();
       if (t.execucao.erro instanceof CredencialError) {
         this.adicionarToast(`Esse comando exige a credencial “${t.execucao.erro.credencial}”. Na Sala de Treino, dá para liberar todas.`);
@@ -406,6 +413,8 @@ export class Controlador {
     this.painel = null;
     this.aviso = null;
     this.tutorial = null;
+    this.roteiro = 'campanha';
+    this.ultimaExecucaoOk = false;
     this.aba = 'resultado';
     this.tela = 'jogo';
     this.parecerExpediente = undefined;
@@ -416,6 +425,10 @@ export class Controlador {
   private restaurarCampanha() {
     if (this.modo === 'campanha') return;
     this.modo = 'campanha';
+    if (this.roteiro === 'treino') {
+      this.tutorial = null;
+      this.roteiro = 'campanha';
+    }
     this.treino = undefined;
     this.expediente = undefined;
     this.parecerExpediente = undefined;
@@ -430,6 +443,12 @@ export class Controlador {
     this.entrarNoModo('treino');
     this.blocosTreino.clear();
     this.treino = new SalaDeTreino(jogo.mundo, () => jogo.possui);
+    // Primeira visita: o tutorial da Sala abre sozinho.
+    if (jogo.marcarAviso('tutorial-treino')) {
+      this.roteiro = 'treino';
+      this.tutorial = 0;
+      this.salvar();
+    }
     som.clique();
     this.mudou();
   }
@@ -476,6 +495,8 @@ export class Controlador {
   private trocarArquivoTreino(acao: () => void) {
     this.blocosTreino.set(this.chaveTreino, this.blocos);
     acao();
+    this.ultimaExecucaoOk = false;
+    this.checarTutorial();
     this.blocos = this.blocosTreino.get(this.chaveTreino) ?? [];
     this.destaque = SEM_DESTAQUE;
     this.aba = 'resultado';
@@ -527,6 +548,7 @@ export class Controlador {
     const mesa = this.treino?.ativo;
     if (!mesa || mesa.deferido) return;
     const r = mesa.protocolar();
+    this.checarTutorial();
     if (r.validacao.ok) {
       som.carimbo();
       this.adicionarToast(`Deferido: ${mesa.missao.titulo}. Gere outro quando quiser.`);
@@ -579,18 +601,22 @@ export class Controlador {
 
   // --- tutorial e avisos --------------------------------------------------------
 
+  get passosTutorial() {
+    return ROTEIROS[this.roteiro];
+  }
+
   private checarTutorial() {
     if (this.tutorial === null) return;
-    const passo = PASSOS_TUTORIAL[this.tutorial];
+    const passo = this.passosTutorial[this.tutorial];
     if (passo.espera?.(this)) this.avancarTutorial();
   }
 
   avancarTutorial() {
     if (this.tutorial === null) return;
     this.tutorial++;
-    if (this.tutorial >= PASSOS_TUTORIAL.length) {
+    if (this.tutorial >= this.passosTutorial.length) {
       this.tutorial = null;
-      if (this.jogo) this.jogo.progresso.tutorialConcluido = true;
+      if (this.jogo && this.roteiro === 'campanha') this.jogo.progresso.tutorialConcluido = true;
       this.salvar();
       this.mudou();
       this.verificarAvisos();
@@ -601,14 +627,16 @@ export class Controlador {
   }
 
   pularTutorial() {
-    this.tutorial = PASSOS_TUTORIAL.length - 1;
+    this.tutorial = this.passosTutorial.length - 1;
     this.avancarTutorial();
   }
 
   reverTutorial() {
     this.painel = null;
     this.aviso = null;
-    this.tutorial = 1;
+    // Na Sala de Treino, o roteiro da Sala desde o começo; na campanha, pula a boas-vindas.
+    this.roteiro = this.modo === 'treino' ? 'treino' : 'campanha';
+    this.tutorial = this.roteiro === 'treino' ? 0 : 1;
     this.mudou();
   }
 

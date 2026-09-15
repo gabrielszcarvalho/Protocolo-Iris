@@ -85,6 +85,67 @@ export const PASSOS_TUTORIAL: PassoTutorial[] = [
   },
 ];
 
+/** Roteiro da Sala de Treino: aparece na primeira visita e pode ser revisto pelo Menu. */
+export const PASSOS_TUTORIAL_TREINO: PassoTutorial[] = [
+  {
+    alvo: null,
+    titulo: 'Sala de Treino',
+    texto: 'Aqui nada vale carimbo e nada estraga a campanha: tudo acontece em CÓPIAS do seu arquivo. É o lugar para errar à vontade. Vou mostrar como funciona.',
+    botao: 'Mostrar',
+  },
+  {
+    alvo: 'treino-livre',
+    titulo: 'Todas as credenciais',
+    texto: 'Por padrão você só usa os comandos que já comprou. Marque esta opção para liberar TUDO na Sala — inclusive os assuntos que o gerador de memorandos pode sortear.',
+  },
+  {
+    alvo: 'treino-gerar',
+    titulo: 'Gerar memorando',
+    texto: 'Escolha um assunto (ou deixe “Qualquer assunto”) e clique em GERAR MEMORANDO. Cada exercício é sorteado com dados reais do arquivo e corrigido como na campanha.',
+    espera: (c) => (c.treino?.memorandos.length ?? 0) > 0,
+    aguardando: 'Gere um memorando…',
+  },
+  {
+    alvo: 'treino-abas',
+    titulo: 'Um arquivo por aba',
+    texto: 'O memorando abriu numa ABA. Cada aba — e o Terminal livre — tem o SEU próprio arquivo: apagar tudo numa não muda nada nas outras. Dá para abrir vários ao mesmo tempo.',
+  },
+  {
+    alvo: 'objetivos',
+    titulo: 'O que entregar',
+    texto: 'Leia o pedido e os itens de A ENTREGAR. Quando você protocolar, cada quadradinho vira ✓ ou ✗.',
+  },
+  {
+    alvo: 'editor',
+    titulo: 'Resolva no terminal',
+    texto: 'Escreva a resposta e EXECUTE (Ctrl+Enter). O mapa e o fichário mostram o arquivo desta aba. Rode quantas vezes quiser.',
+    espera: (c) => c.ultimaExecucaoOk,
+    aguardando: 'Execute um comando…',
+  },
+  {
+    alvo: 'protocolar',
+    titulo: 'Protocolar',
+    texto: 'Analisou a resposta? PROTOCOLE (Ctrl+Shift+Enter). Errou? O parecer explica o motivo — ajuste e protocole de novo, sem perder nada.',
+    espera: (c) => !!c.treino?.ativo?.parecer,
+    aguardando: 'Protocole a resposta…',
+  },
+  {
+    alvo: 'treino-acoes',
+    titulo: 'Dicas, pular e restaurar',
+    texto: 'PEDIR DICA vai até a solução completa, com “Levar ao terminal”. PULAR troca por outro exercício do mesmo assunto. RESTAURAR volta só o arquivo desta aba. DESCARTAR fecha o memorando.',
+  },
+  {
+    alvo: 'botao-menu',
+    titulo: 'De volta ao expediente',
+    texto: 'Para voltar aos memorandos da campanha ou rever este tutorial, abra o MENU. Bom treino — no Purgatório, tempo é o que não falta.',
+    botao: 'Começar a treinar',
+  },
+];
+
+export type Roteiro = 'campanha' | 'treino';
+
+export const ROTEIROS: Record<Roteiro, PassoTutorial[]> = { campanha: PASSOS_TUTORIAL, treino: PASSOS_TUTORIAL_TREINO };
+
 export interface AvisoContextual {
   chave: string;
   alvo: string;

@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useControlador } from '../controlador';
-import { PASSOS_TUTORIAL } from '../tutorialDados';
+
 
 interface Retangulo {
   top: number;
@@ -15,7 +15,7 @@ const MARGEM = 14;
 
 export function Tutorial() {
   const c = useControlador();
-  const passo = c.tutorial !== null ? PASSOS_TUTORIAL[c.tutorial] : c.aviso;
+  const passo = c.tutorial !== null ? c.passosTutorial[c.tutorial] : c.aviso;
   const alvo = passo?.alvo ?? null;
   const [ret, setRet] = useState<Retangulo | null>(null);
   const [tela, setTela] = useState({ w: window.innerWidth, h: window.innerHeight });
@@ -42,7 +42,7 @@ export function Tutorial() {
 
   useEffect(() => {
     if (!passo || c.fila.length || c.painel) return;
-    const semEspera = c.tutorial === null || !PASSOS_TUTORIAL[c.tutorial].espera;
+    const semEspera = c.tutorial === null || !c.passosTutorial[c.tutorial].espera;
     const tecla = (e: KeyboardEvent) => {
       const noEditor = (e.target as HTMLElement).closest?.('.cm-editor');
       if (e.key === 'Enter' && semEspera && !noEditor && !e.ctrlKey && !e.metaKey) {
@@ -57,7 +57,7 @@ export function Tutorial() {
   if (!passo || c.fila.length || c.painel) return null;
 
   const ehTutorial = c.tutorial !== null;
-  const passoTutorial = ehTutorial ? PASSOS_TUTORIAL[c.tutorial!] : undefined;
+  const passoTutorial = ehTutorial ? c.passosTutorial[c.tutorial!] : undefined;
 
   // Posição da caixa: abaixo do alvo se couber; senão acima; senão ao lado.
   let top = tela.h / 2 - 110;
@@ -102,12 +102,12 @@ export function Tutorial() {
         role="dialog"
         aria-label={passo.titulo}
       >
-        <p className="tutorial-contador">{ehTutorial ? `Tutorial · ${c.tutorial! + 1} de ${PASSOS_TUTORIAL.length}` : 'Dica do Departamento'}</p>
+        <p className="tutorial-contador">{ehTutorial ? `Tutorial · ${c.tutorial! + 1} de ${c.passosTutorial.length}` : 'Dica do Departamento'}</p>
         <h3>{passo.titulo}</h3>
         <p>{passo.texto}</p>
         {passoTutorial?.codigo && <code className="tutorial-codigo">{passoTutorial.codigo}</code>}
         <div className="tutorial-acoes">
-          {ehTutorial && c.tutorial! < PASSOS_TUTORIAL.length - 1 && (
+          {ehTutorial && c.tutorial! < c.passosTutorial.length - 1 && (
             <button className="link" onClick={() => c.pularTutorial()}>
               Pular tutorial
             </button>
